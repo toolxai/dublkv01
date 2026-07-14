@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Suspense } from 'react';
 
 function CallbackHandler() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<'loading' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
@@ -18,35 +16,36 @@ function CallbackHandler() {
 
     if (errorParam) {
       setErrorMsg(decodeURIComponent(errorParam));
-      setStatus('error');
-      setTimeout(() => router.replace('/'), 3000);
+      // Hard redirect home after showing error briefly
+      setTimeout(() => { window.location.href = '/'; }, 3000);
       return;
     }
 
     if (!code) {
-      // No code — just go home
-      router.replace('/');
+      // No code — go home via hard redirect
+      window.location.href = '/';
       return;
     }
 
-    // Exchange the code client-side so the PKCE verifier (stored in browser cookies)
-    // is always accessible — this works on ALL browsers and environments.
+    // Exchange the code client-side — the PKCE verifier was stored in browser
+    // cookies by the same browser client, so it is always accessible here.
     const supabase = createClient();
     supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
       if (error) {
         console.error('[auth/callback] exchange error:', error.message);
         setErrorMsg(error.message);
-        setStatus('error');
-        setTimeout(() => router.replace('/'), 3000);
+        setTimeout(() => { window.location.href = '/'; }, 3000);
       } else {
-        // Session is now set in browser cookies — redirect to destination
-        router.replace(next);
+        // HARD redirect — ensures the new session cookies are picked up fresh
+        // on the next page load. router.replace() is soft navigation and misses
+        // the newly-set Set-Cookie headers.
+        window.location.href = next;
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (status === 'error') {
+  if (errorMsg) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
         <div className="text-center max-w-md">
@@ -57,7 +56,7 @@ function CallbackHandler() {
           </div>
           <h2 className="text-white text-lg font-semibold mb-2">Sign-in failed</h2>
           <p className="text-dark-400 text-sm mb-4">{errorMsg}</p>
-          <p className="text-dark-600 text-xs">Redirecting you back home...</p>
+          <p className="text-dark-600 text-xs">Redirecting home...</p>
         </div>
       </div>
     );

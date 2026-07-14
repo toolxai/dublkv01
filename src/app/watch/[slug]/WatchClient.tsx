@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -62,62 +62,21 @@ export default function WatchClient({ movie }: WatchClientProps) {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [activeServer, setActiveServer] = useState<ServerTab>('server1');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [hasAccess, setHasAccess] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
-  // Extra grace period after OAuth redirect so auth context fully hydrates
-  const [graceExpired, setGraceExpired] = useState(false);
   const playerContainerRef = useRef<HTMLDivElement>(null);
 
-  // 1.5 s grace period: gives the Supabase session cookies time to propagate
-  // into the auth context after an OAuth redirect (avoids the flash-redirect bug).
+  // FREE plan: any signed-in user can watch — no server API call needed.
+  // The video URL is already in props from the server-side page.
+  const hasAccess = !authLoading && !!user;
+
+  // Redirect unauthenticated users back to movie detail
   useEffect(() => {
-    const t = setTimeout(() => setGraceExpired(true), 1500);
-    return () => clearTimeout(t);
-  }, []);
-
-  // Check access — any signed-in user gets access (FREE plan)
-  const checkAccess = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch(`/api/stream/${movie.id}`);
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          router.replace(`/movies/${movie.slug}`);
-          return;
-        }
-        if (res.status === 403) {
-          router.replace(`/movies/${movie.slug}`);
-          return;
-        }
-        throw new Error(data.error || 'Access check failed');
-      }
-
-      setHasAccess(true);
-    } catch (err: any) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, movie.id, movie.slug, router]);
-
-  useEffect(() => {
-    // Wait for auth to finish loading AND for the grace period to expire.
-    // This prevents bouncing the user back when arriving from OAuth.
-    if (authLoading || !graceExpired) return;
+    if (authLoading) return; // wait for auth to resolve
     if (!user) {
       router.replace(`/movies/${movie.slug}`);
-      return;
     }
-    checkAccess();
-  }, [user, authLoading, graceExpired, movie.slug, router, checkAccess]);
+  }, [user, authLoading, movie.slug, router]);
 
   // Determine which servers are available
   const servers: { id: ServerTab; label: string; icon: string }[] = [];
@@ -176,16 +135,16 @@ export default function WatchClient({ movie }: WatchClientProps) {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   };
 
-  // Auth loading
+  // Auth still resolving
   if (authLoading) {
     return (
       <div className="min-h-screen bg-black pt-16 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Verifying access..." />
+        <LoadingSpinner size="lg" text="Signing in..." />
       </div>
     );
   }
 
-  // Not logged in
+  // Not logged in (will redirect via useEffect)
   if (!user) {
     return (
       <div className="min-h-screen bg-black pt-16 flex items-center justify-center">
@@ -195,7 +154,7 @@ export default function WatchClient({ movie }: WatchClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-dark-950 pt-16 page-enter">
+    <div className="min-h-screen bg-dark-950 pt-16">
       {/* Theater Header */}
       <div className="bg-dark-950/90 backdrop-blur-xl border-b border-white/5 sticky top-16 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
@@ -247,37 +206,7 @@ export default function WatchClient({ movie }: WatchClientProps) {
 
       {/* Video Player Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {loading ? (
-          <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 200px)' }}>
-            <LoadingSpinner size="lg" text="Verifying access..." />
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 200px)' }}>
-            <div className="text-center px-4">
-              <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Unable to Load Stream</h3>
-              <p className="text-dark-400 text-sm mb-4">{error}</p>
-              <div className="flex items-center justify-center gap-3">
-                <button
-                  onClick={checkAccess}
-                  className="px-6 py-2.5 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-500 transition-colors"
-                >
-                  Try Again
-                </button>
-                <button
-                  onClick={() => router.push(`/movies/${movie.slug}`)}
-                  className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-colors"
-                >
-                  Go Back
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : hasAccess ? (
+        {hasAccess ? (
           <>
             {/* Server Tabs */}
             {servers.length > 0 && (
