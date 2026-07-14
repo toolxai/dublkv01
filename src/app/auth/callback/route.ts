@@ -31,9 +31,14 @@ export async function GET(request: NextRequest) {
 
     if (!error) {
       return NextResponse.redirect(new URL(next, requestUrl.origin));
+    } else {
+      console.error('Auth Callback Error:', error);
+      return NextResponse.redirect(
+        new URL(`/?auth_error=${encodeURIComponent(error.message)}`, requestUrl.origin)
+      );
     }
   }
 
-  // If there's an error or no code, redirect to home
-  return NextResponse.redirect(new URL('/?auth_error=true', requestUrl.origin));
+  // If there's no code at all
+  return NextResponse.redirect(new URL('/?auth_error=No_code_provided', requestUrl.origin));
 }
