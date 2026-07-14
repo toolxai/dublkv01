@@ -27,7 +27,7 @@ export async function GET(
 ) {
   const movieId = params.movieId;
 
-  // 1. Verify Authentication
+  // 1. Verify Authentication — must be signed in (FREE plan requires sign-up)
   const supabase = getSupabaseClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -38,19 +38,7 @@ export async function GET(
     );
   }
 
-  // 2. Check profile (admin status + free trial)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin, free_trial_expires_at')
-    .eq('id', user.id)
-    .single();
-  
-  const isAdmin = profile?.is_admin === true;
-  const hasFreeTrialAccess = profile?.free_trial_expires_at 
-    ? new Date(profile.free_trial_expires_at) > new Date()
-    : false;
-
-  // 3. Get movie details
+  // 2. Get movie details
   try {
     const { data: movie, error: movieError } = await supabase
       .from('movies')
@@ -62,36 +50,11 @@ export async function GET(
       return NextResponse.json({ error: 'Movie not found' }, { status: 404 });
     }
 
-    // 4. Check access: Admin > Free Trial > Purchase
-    if (!isAdmin && !hasFreeTrialAccess) {
-      const { data: fullAccess } = await supabase
-        .from('purchases')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('type', 'full')
-        .eq('status', 'verified')
-        .limit(1);
+    // 3. Access model:
+    //    FREE  — any signed-in user can watch all movies (no payment needed)
+    //    VIP   — Rs.100 lifetime — grants new releases & priority requests (future gating)
+    // Any authenticated request passes. No purchase check for the free tier.
 
-      if (!fullAccess || fullAccess.length === 0) {
-        const { data: singleAccess } = await supabase
-          .from('purchases')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('movie_id', movieId)
-          .eq('type', 'single')
-          .eq('status', 'verified')
-          .limit(1);
-
-        if (!singleAccess || singleAccess.length === 0) {
-          return NextResponse.json(
-            { error: 'Access denied. Purchase required.' },
-            { status: 403 }
-          );
-        }
-      }
-    }
-
-    // 5. Return access grant — the client handles embed URL construction
     return NextResponse.json({
       access: true,
       title: movie.title,

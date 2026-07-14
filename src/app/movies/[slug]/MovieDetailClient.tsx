@@ -43,47 +43,9 @@ export default function MovieDetailClient({ movie, relatedMovies }: MovieDetailC
         return;
       }
 
-      // Check full access
-      const { data: full } = await supabase
-        .from('purchases')
-        .select('id, status')
-        .eq('user_id', user.id)
-        .eq('type', 'full')
-        .eq('status', 'verified')
-        .limit(1);
-
-      if (full && full.length > 0) {
-        setHasAccess(true);
-        setCheckingAccess(false);
-        return;
-      }
-
-      // Check single access
-      const { data: single } = await supabase
-        .from('purchases')
-        .select('id, status')
-        .eq('user_id', user.id)
-        .eq('movie_id', movie.id)
-        .eq('status', 'verified')
-        .limit(1);
-
-      if (single && single.length > 0) {
-        setHasAccess(true);
-      }
-
-      // Check pending
-      const { data: pending } = await supabase
-        .from('purchases')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('status', 'pending')
-        .or(`movie_id.eq.${movie.id},type.eq.full`)
-        .limit(1);
-
-      if (pending && pending.length > 0) {
-        setHasPending(true);
-      }
-
+      // FREE plan: all signed-in users can watch all movies
+      // Just being logged in grants access
+      setHasAccess(true);
       setCheckingAccess(false);
     }
 

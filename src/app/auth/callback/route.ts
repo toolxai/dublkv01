@@ -8,7 +8,9 @@ export async function GET(request: NextRequest) {
   const next = requestUrl.searchParams.get('next') ?? '/';
 
   if (code) {
+    // In Next.js 14 App Router Route Handlers, cookies() must be awaited
     const cookieStore = cookies();
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,10 +20,14 @@ export async function GET(request: NextRequest) {
             return cookieStore.get(name)?.value;
           },
           set(name: string, value: string, options: CookieOptions) {
-            cookieStore.set({ name, value, ...options });
+            try {
+              cookieStore.set({ name, value, ...options });
+            } catch {}
           },
           remove(name: string, options: CookieOptions) {
-            cookieStore.delete(name);
+            try {
+              cookieStore.delete(name);
+            } catch {}
           },
         },
       }
@@ -30,15 +36,17 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(new URL(next, requestUrl.origin));
+      // Strip the ?code= from the final URL so it doesn't show in address bar
+      const redirectUrl = new URL(next, requestUrl.origin);
+      return NextResponse.redirect(redirectUrl);
     } else {
-      console.error('Auth Callback Error:', error);
+      console.error('[auth/callback] PKCE exchange error:', error.message);
       return NextResponse.redirect(
         new URL(`/?auth_error=${encodeURIComponent(error.message)}`, requestUrl.origin)
       );
     }
   }
 
-  // If there's no code at all
-  return NextResponse.redirect(new URL('/?auth_error=No_code_provided', requestUrl.origin));
+  // No code present — redirect home
+  return NextResponse.redirect(new URL('/', requestUrl.origin));
 }
