@@ -101,7 +101,6 @@ export default function Navbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <span className="text-sm flex-1 text-left">Search...</span>
-              <kbd className="hidden lg:inline text-[10px] px-2 py-0.5 bg-white/8 border border-white/12 rounded-full text-dark-600 font-mono flex-shrink-0">⌘K</kbd>
             </button>
 
             {/* Right section — avatar / sign-in + mobile hamburger */}
