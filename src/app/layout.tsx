@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -7,6 +7,14 @@ import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import AuthModal from '@/components/auth/AuthModal';
 import AuthCodeRedirect from '@/components/ui/AuthCodeRedirect';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#050508',
+};
 
 export const metadata: Metadata = {
   title: {

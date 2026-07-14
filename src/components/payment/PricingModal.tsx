@@ -225,7 +225,8 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle }: P
                     <p className="text-sm text-dark-400 mb-6">Select how you want to watch &quot;{movieTitle}&quot;</p>
 
                     <div className="space-y-3">
-                      {/* Free Trial Card */}
+
+                      {/* FREE Plan — totally free, just sign up */}
                       <button
                         onClick={handleFreeTrial}
                         disabled={trialLoading}
@@ -237,17 +238,25 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle }: P
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-lg">🎁</span>
-                              <h3 className="text-base font-semibold text-white">3-Day Free Trial</h3>
+                              <span className="text-lg">🎬</span>
+                              <h3 className="text-base font-semibold text-white">Free — Watch All Movies</h3>
                             </div>
-                            <p className="text-xs text-dark-400">Full access to all movies for 3 days</p>
-                            <p className="text-[10px] text-emerald-400/70 mt-1">
-                              {user ? 'Sign-in required ✓' : '⚠ You must sign in first'}
-                            </p>
+                            <p className="text-xs text-dark-400">Access to all movies — completely free, forever</p>
+                            <div className="flex flex-col gap-0.5 mt-1.5">
+                              <p className="text-[11px] text-emerald-400 flex items-center gap-1">
+                                <span>✓</span> All movies — no payment ever
+                              </p>
+                              <p className="text-[11px] text-emerald-400 flex items-center gap-1">
+                                <span>✓</span> Just sign up &amp; watch
+                              </p>
+                              <p className="text-[11px] text-dark-500 flex items-center gap-1">
+                                <span>✗</span> New releases &amp; TV series (VIP only)
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-emerald-400">Free</p>
-                            <p className="text-[10px] text-dark-500">3 days only</p>
+                          <div className="text-right ml-4 flex-shrink-0">
+                            <p className="text-3xl font-bold text-emerald-400">FREE</p>
+                            <p className="text-[10px] text-dark-500">forever</p>
                           </div>
                         </div>
                         {trialLoading && (
@@ -257,48 +266,40 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle }: P
                         )}
                       </button>
 
-                      {/* Single Movie Plan */}
+                      {/* VIP — Rs.100 Lifetime */}
                       <button
-                        onClick={() => handleSelectPlan('single')}
-                        className="w-full p-5 rounded-xl border border-white/10 bg-white/5 hover:border-brand-500/50 hover:bg-brand-500/5 text-left transition-all duration-200 group/plan"
+                        onClick={() => handleSelectPlan('full')}
+                        className="w-full p-5 rounded-xl border border-brand-500/30 bg-brand-500/5 hover:border-brand-500/60 hover:bg-brand-500/10 text-left transition-all duration-200 relative overflow-hidden"
                       >
+                        <div className="absolute -top-px -right-px px-3 py-1 bg-gradient-to-r from-brand-600 to-amber-500 text-white text-[10px] font-bold rounded-bl-xl">
+                          👑 VIP
+                        </div>
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-lg">🎬</span>
-                              <h3 className="text-base font-semibold text-white">Single Movie</h3>
+                              <span className="text-lg">⚡</span>
+                              <h3 className="text-base font-semibold text-white">VIP — Lifetime Access</h3>
                             </div>
-                            <p className="text-xs text-dark-400">Lifetime access to this movie only</p>
+                            <p className="text-xs text-dark-400">One-time payment, everything unlocked forever</p>
+                            <div className="flex flex-col gap-0.5 mt-1.5">
+                              <p className="text-[11px] text-brand-300 flex items-center gap-1">
+                                <span>✓</span> New release movies &amp; TV series
+                              </p>
+                              <p className="text-[11px] text-brand-300 flex items-center gap-1">
+                                <span>✓</span> Priority movie &amp; series requests
+                              </p>
+                              <p className="text-[11px] text-brand-300 flex items-center gap-1">
+                                <span>✓</span> Everything in Free, plus more
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-white">{formatCurrency(20)}</p>
+                          <div className="text-right ml-4 flex-shrink-0">
+                            <p className="text-3xl font-bold text-white">{formatCurrency(100)}</p>
                             <p className="text-[10px] text-dark-500">one-time</p>
                           </div>
                         </div>
                       </button>
 
-                      {/* Full Access Plan */}
-                      <button
-                        onClick={() => handleSelectPlan('full')}
-                        className="w-full p-5 rounded-xl border border-brand-500/30 bg-brand-500/5 hover:border-brand-500/60 hover:bg-brand-500/10 text-left transition-all duration-200 relative overflow-hidden"
-                      >
-                        <div className="absolute -top-px -right-px px-3 py-1 bg-brand-500 text-white text-[10px] font-bold rounded-bl-xl">
-                          BEST VALUE
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-lg">👑</span>
-                              <h3 className="text-base font-semibold text-white">All Movies</h3>
-                            </div>
-                            <p className="text-xs text-dark-400">Lifetime access to all 115+ movies</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-white">{formatCurrency(100)}</p>
-                            <p className="text-[10px] text-dark-500">one-time</p>
-                          </div>
-                        </div>
-                      </button>
                     </div>
                   </div>
                 )}

@@ -55,18 +55,18 @@ export default function Navbar() {
               />
             </Link>
 
-            {/* Desktop Nav Links */}
-            <div className="hidden md:flex items-center gap-1">
+            {/* Desktop Nav Links — frosted glass pill */}
+            <div className="hidden md:flex items-center gap-0.5 bg-white/[0.06] backdrop-blur-md border border-white/8 rounded-2xl px-2 py-1.5">
               {navLinks.map(({ href, label }) => {
                 const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                    className={`px-4 py-1.5 text-sm rounded-xl transition-all duration-200 ${
                       isActive
-                        ? 'text-white bg-white/8 font-medium'
-                        : 'text-dark-300 hover:text-white hover:bg-white/5'
+                        ? 'text-white bg-white/15 font-medium'
+                        : 'text-dark-300 hover:text-white hover:bg-white/8'
                     }`}
                   >
                     {label}
@@ -76,9 +76,9 @@ export default function Navbar() {
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  className={`px-4 py-1.5 text-sm rounded-xl transition-all duration-200 ${
                     pathname === '/admin'
-                      ? 'text-brand-300 bg-brand-500/15 font-medium'
+                      ? 'text-brand-300 bg-brand-500/20 font-medium'
                       : 'text-brand-400 hover:text-brand-300 hover:bg-brand-500/10'
                   }`}
                 >
@@ -86,6 +86,7 @@ export default function Navbar() {
                 </Link>
               )}
             </div>
+
 
             {/* Right section */}
             <div className="flex items-center gap-2">

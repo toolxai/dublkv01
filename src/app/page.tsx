@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import HeroBanner from '@/components/ui/HeroBanner';
+import HomeClient from '@/app/HomeClient';
 import MovieRow from '@/components/ui/MovieRow';
 
 // Revalidate every 60 seconds for ISR
@@ -74,8 +74,8 @@ export default async function HomePage() {
 
   return (
     <div className="page-enter">
-      {/* Hero Banner */}
-      <HeroBanner movies={heroMovies} />
+      {/* Hero Banner + Search Overlay */}
+      <HomeClient heroMovies={heroMovies} />
 
       {/* Movie Rows */}
       <div className="relative -mt-20 z-10 space-y-10 pb-16">

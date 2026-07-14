@@ -5,9 +5,31 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── iOS Safari viewport fix ───────────────────────────────────────────── */
+  html {
+    /* Prevents horizontal scroll on iOS */
+    overflow-x: hidden;
+    /* Use dynamic viewport height so address bar doesn't cut off content */
+    height: -webkit-fill-available;
+  }
+
   body {
     @apply bg-dark-950 text-white antialiased;
     font-feature-settings: 'kern' 1, 'liga' 1;
+    /* iOS momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent tap highlight flash on iOS */
+    -webkit-tap-highlight-color: transparent;
+    /* Prevent iOS text size adjust after orientation change */
+    -webkit-text-size-adjust: 100%;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* Ensure buttons don't get default iOS styling */
+  button, input, textarea, select {
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   ::selection {
@@ -34,6 +56,11 @@
 }
 
 @layer utilities {
+  /* Safe area padding for iOS home indicator */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

@@ -4,16 +4,14 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-interface SearchResult {
-  id: number;
-  title?: string;
-  name?: string;
-  release_date?: string;
-  first_air_date?: string;
-  poster_path?: string | null;
-  media_type: 'movie' | 'tv';
-  vote_average?: number;
-  overview?: string;
+interface DBMovie {
+  id: string;
+  slug: string;
+  title: string;
+  release_year: number | null;
+  poster_url: string | null;
+  genres: string[];
+  rating: number;
 }
 
 interface GlobalSearchProps {
@@ -34,9 +32,9 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<DBMovie[]>([]);
   const [loading, setLoading] = useState(false);
-  const debouncedQuery = useDebounce(query, 320);
+  const debouncedQuery = useDebounce(query, 280);
 
   // Focus input when opened
   useEffect(() => {
@@ -59,23 +57,15 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // Fetch TMDB results
+  // Search against our OWN database movies only
   const search = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); return; }
     setLoading(true);
     try {
-      const res = await fetch(`/api/tmdb/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
-      // Accept movies + tv from multi-search
-      const items: SearchResult[] = (data.results || data.movies || [])
-        .filter((r: any) => r.media_type === 'movie' || r.media_type === 'tv' || r.title || r.name)
-        .slice(0, 8)
-        .map((r: any) => ({
-          ...r,
-          media_type: r.media_type || 'movie',
-        }));
-      setResults(items);
+      setResults((data.movies || []).slice(0, 10));
     } catch {
       setResults([]);
     } finally {
@@ -87,29 +77,10 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     search(debouncedQuery);
   }, [debouncedQuery, search]);
 
-  const handleSelect = (item: SearchResult) => {
+  const handleSelect = (movie: DBMovie) => {
     onClose();
-    // Navigate to our movies page or TV series page
-    if (item.media_type === 'tv') {
-      router.push(`/tv-series`);
-    } else {
-      // Try to find slug from title
-      const slug = (item.title || '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-      const year = item.release_date?.slice(0, 4);
-      router.push(`/movies/${slug}${year ? `-${year}` : ''}`);
-    }
+    router.push(`/movies/${movie.slug}`);
   };
-
-  const year = (item: SearchResult) =>
-    (item.release_date || item.first_air_date || '').slice(0, 4);
-
-  const posterUrl = (item: SearchResult) =>
-    item.poster_path
-      ? `https://image.tmdb.org/t/p/w92${item.poster_path}`
-      : null;
 
   if (!open) return null;
 
@@ -143,7 +114,6 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
         {/* Input bar */}
         <div className="relative flex items-center bg-dark-800/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-brand-500/30 focus-within:ring-brand-500/70 transition-all duration-300">
-          {/* Search icon */}
           <div className="pl-5 pr-3 flex-shrink-0">
             {loading ? (
               <svg className="w-5 h-5 text-brand-400 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -181,19 +151,19 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             className="mt-2 bg-dark-800/98 border border-white/8 rounded-2xl shadow-2xl overflow-hidden"
             style={{ animation: 'fadeSlideDown 0.2s ease' }}
           >
-            {results.map((item, idx) => (
+            {results.map((movie, idx) => (
               <button
-                key={`${item.media_type}-${item.id}`}
-                onClick={() => handleSelect(item)}
+                key={movie.id}
+                onClick={() => handleSelect(movie)}
                 className="w-full flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-all duration-150 group text-left border-b border-white/5 last:border-0"
                 style={{ animationDelay: `${idx * 30}ms` }}
               >
                 {/* Poster */}
                 <div className="flex-shrink-0 w-10 h-14 rounded-lg overflow-hidden bg-dark-700 relative">
-                  {posterUrl(item) ? (
+                  {movie.poster_url ? (
                     <Image
-                      src={posterUrl(item)!}
-                      alt={item.title || item.name || ''}
+                      src={movie.poster_url}
+                      alt={movie.title}
                       fill
                       className="object-cover"
                       sizes="40px"
@@ -210,26 +180,22 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-medium truncate group-hover:text-brand-300 transition-colors">
-                    {item.title || item.name}
+                    {movie.title}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    {year(item) && (
-                      <span className="text-xs text-dark-500">{year(item)}</span>
+                    {movie.release_year && (
+                      <span className="text-xs text-dark-500">{movie.release_year}</span>
                     )}
-                    <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                      item.media_type === 'tv'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-brand-500/20 text-brand-400'
-                    }`}>
-                      {item.media_type === 'tv' ? 'TV Series' : 'Movie'}
+                    <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-brand-500/20 text-brand-400">
+                      Movie
                     </span>
-                    {item.vote_average && item.vote_average > 0 && (
-                      <span className="text-xs text-yellow-400">★ {item.vote_average.toFixed(1)}</span>
+                    {movie.rating > 0 && (
+                      <span className="text-xs text-yellow-400">★ {movie.rating.toFixed(1)}</span>
                     )}
                   </div>
-                  {item.overview && (
-                    <p className="text-xs text-dark-500 mt-0.5 truncate hidden sm:block">
-                      {item.overview.slice(0, 80)}…
+                  {movie.genres?.length > 0 && (
+                    <p className="text-xs text-dark-500 mt-0.5 truncate">
+                      {movie.genres.slice(0, 3).join(', ')}
                     </p>
                   )}
                 </div>
@@ -243,7 +209,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           </div>
         )}
 
-        {/* No results state */}
+        {/* No results */}
         {query && !loading && results.length === 0 && (
           <div
             className="mt-2 bg-dark-800/98 border border-white/8 rounded-2xl shadow-2xl p-8 text-center"
@@ -255,6 +221,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               </svg>
             </div>
             <p className="text-dark-400 text-sm">No results for &ldquo;{query}&rdquo;</p>
+            <p className="text-dark-600 text-xs mt-1">Try a different title</p>
           </div>
         )}
 
