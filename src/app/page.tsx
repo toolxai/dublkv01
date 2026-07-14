@@ -73,7 +73,7 @@ export default async function HomePage() {
     .slice(0, 8);
 
   return (
-    <div className="page-enter">
+    <div>
       {/* Hero Banner + Search Overlay */}
       <HomeClient heroMovies={heroMovies} />
 
