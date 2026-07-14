@@ -26,12 +26,19 @@ export default function AuthCodeRedirect() {
     const supabase = createClient();
     supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
       if (!error) {
-        // Remove the ?code= from the URL cleanly without adding to history
+        // Hard redirect to clear the URL and force the browser to send the new session cookies to the server
         const clean = new URL(window.location.href);
         clean.searchParams.delete('code');
-        router.replace(clean.pathname + (clean.search || ''));
+        window.location.href = clean.href;
+      } else {
+        // If it failed (e.g., PKCE verifier missing due to opening in a different browser),
+        // we can remove the code to prevent infinite loops, but leave them on the homepage.
+        console.error('[AuthCodeRedirect] Error:', error.message);
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete('code');
+        clean.searchParams.set('error', encodeURIComponent(error.message));
+        window.location.href = clean.href;
       }
-      // On error, leave the URL as-is — user is still on homepage
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
