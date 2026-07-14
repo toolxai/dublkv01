@@ -15,11 +15,13 @@ export default function AuthCodeRedirect() {
   useEffect(() => {
     const code = searchParams.get('code');
     if (code) {
-      // Build the proper callback URL with the code
+      // Use window.location.replace for a HARD redirect to the API route.
+      // Next.js router.replace can cause infinite client-side routing loops
+      // when navigating to a backend API route that responds with a 307 redirect.
       const callbackUrl = `/auth/callback?code=${encodeURIComponent(code)}`;
-      router.replace(callbackUrl);
+      window.location.replace(callbackUrl);
     }
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   return null;
 }
