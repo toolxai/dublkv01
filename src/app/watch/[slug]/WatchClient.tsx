@@ -64,6 +64,7 @@ export default function WatchClient({ movie }: WatchClientProps) {
   const [activeServer, setActiveServer] = useState<ServerTab>('server1');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [mobilePlayerStarted, setMobilePlayerStarted] = useState(false);
   const playerContainerRef = useRef<HTMLDivElement>(null);
 
   // FREE plan: any signed-in user can watch — no server API call needed.
@@ -261,6 +262,26 @@ export default function WatchClient({ movie }: WatchClientProps) {
                         <LoadingSpinner size="lg" text="Loading player..." />
                       </div>
                     )}
+                    
+                    {/* Mobile Fullscreen Interceptor */}
+                    {!mobilePlayerStarted && iframeLoaded && (
+                      <div 
+                        className="sm:hidden absolute inset-0 z-[15] bg-transparent flex items-center justify-center cursor-pointer group"
+                        onClick={() => {
+                          setMobilePlayerStarted(true);
+                          if (!document.fullscreenElement && playerContainerRef.current) {
+                            playerContainerRef.current.requestFullscreen().catch(() => {});
+                          }
+                        }}
+                      >
+                        <div className="w-16 h-16 rounded-full bg-brand-500/80 backdrop-blur-md flex items-center justify-center text-white shadow-xl shadow-brand-500/30 transform transition-transform group-hover:scale-110">
+                          <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+
                     <iframe
                       src={embedUrl}
                       className="absolute inset-0 w-full h-full border-0"

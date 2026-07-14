@@ -50,9 +50,9 @@ export default function Navbar() {
               <Image
                 src="/logo.png"
                 alt="dubLK"
-                width={180}
-                height={50}
-                className="h-12 lg:h-16 w-auto object-contain"
+                width={220}
+                height={60}
+                className="h-12 lg:h-16 w-auto object-contain scale-[1.3] lg:scale-[1.5] origin-left"
                 priority
               />
             </Link>

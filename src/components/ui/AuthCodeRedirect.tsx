@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 /**
@@ -11,8 +11,12 @@ import { createClient } from '@/lib/supabase/client';
 export default function AuthCodeRedirect() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
+    // DO NOT intercept if we are on the official callback route
+    if (pathname === '/auth/callback') return;
+
     const code = searchParams.get('code');
     if (!code) return;
 
