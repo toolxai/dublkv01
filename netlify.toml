@@ -1,0 +1,24 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Ensure auth cookies are never cached at the edge
+[[headers]]
+  for = "/auth/*"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate"
+    X-Frame-Options = "DENY"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store"
+
+# Allow cookies to pass through for all routes
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"

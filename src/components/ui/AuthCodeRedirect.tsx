@@ -2,11 +2,11 @@
 
 import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 /**
- * Safety-net component: detects OAuth/email-confirmation `?code=` params
- * that land on the wrong page (e.g. homepage) and redirects them to
- * /auth/callback so the session exchange can happen properly.
+ * Safety-net: if Google/email OAuth ever lands the ?code= on the homepage,
+ * we exchange it client-side here (same browser storage as where it was set).
  */
 export default function AuthCodeRedirect() {
   const searchParams = useSearchParams();
@@ -14,14 +14,23 @@ export default function AuthCodeRedirect() {
 
   useEffect(() => {
     const code = searchParams.get('code');
-    if (code) {
-      // Use window.location.replace for a HARD redirect to the API route.
-      // Next.js router.replace can cause infinite client-side routing loops
-      // when navigating to a backend API route that responds with a 307 redirect.
-      const callbackUrl = `/auth/callback?code=${encodeURIComponent(code)}`;
-      window.location.replace(callbackUrl);
-    }
-  }, [searchParams]);
+    if (!code) return;
+
+    // Exchange the code right here in the browser — no server round-trip needed.
+    // This ensures the PKCE code_verifier (stored in browser cookies) is always
+    // accessible, regardless of which browser or device the user is on.
+    const supabase = createClient();
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (!error) {
+        // Remove the ?code= from the URL cleanly without adding to history
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete('code');
+        router.replace(clean.pathname + (clean.search || ''));
+      }
+      // On error, leave the URL as-is — user is still on homepage
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return null;
 }
