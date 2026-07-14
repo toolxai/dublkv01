@@ -59,7 +59,7 @@ function getGDriveEmbedUrl(url: string): string {
 }
 
 export default function WatchClient({ movie }: WatchClientProps) {
-  const { user, isLoading: authLoading, openAuthModal } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [activeServer, setActiveServer] = useState<ServerTab>('server1');
   const [loading, setLoading] = useState(true);
@@ -67,9 +67,18 @@ export default function WatchClient({ movie }: WatchClientProps) {
   const [hasAccess, setHasAccess] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  // Extra grace period after OAuth redirect so auth context fully hydrates
+  const [graceExpired, setGraceExpired] = useState(false);
   const playerContainerRef = useRef<HTMLDivElement>(null);
 
-  // Check access (admin bypass, purchase, or free trial)
+  // 1.5 s grace period: gives the Supabase session cookies time to propagate
+  // into the auth context after an OAuth redirect (avoids the flash-redirect bug).
+  useEffect(() => {
+    const t = setTimeout(() => setGraceExpired(true), 1500);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Check access — any signed-in user gets access (FREE plan)
   const checkAccess = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -93,20 +102,22 @@ export default function WatchClient({ movie }: WatchClientProps) {
 
       setHasAccess(true);
     } catch (err: any) {
-      setError(err.message);
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
   }, [user, movie.id, movie.slug, router]);
 
   useEffect(() => {
-    if (authLoading) return;
+    // Wait for auth to finish loading AND for the grace period to expire.
+    // This prevents bouncing the user back when arriving from OAuth.
+    if (authLoading || !graceExpired) return;
     if (!user) {
       router.replace(`/movies/${movie.slug}`);
       return;
     }
     checkAccess();
-  }, [user, authLoading, movie.slug, router, checkAccess]);
+  }, [user, authLoading, graceExpired, movie.slug, router, checkAccess]);
 
   // Determine which servers are available
   const servers: { id: ServerTab; label: string; icon: string }[] = [];
@@ -295,48 +306,53 @@ export default function WatchClient({ movie }: WatchClientProps) {
             {/* Video Player */}
             <div
               ref={playerContainerRef}
-              className="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-black/60 border border-white/5 bg-black"
+              className="relative w-full rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl shadow-black/60 border border-white/5 bg-black"
             >
-              {/* 16:9 Aspect Ratio Container with tall min-height to prevent Google Drive control cropping */}
-              <div className="relative w-full aspect-video min-h-[320px] sm:min-h-[400px] lg:min-h-[450px]">
+              {/*
+                Mobile-first responsive container:
+                - Mobile  (<640 px): fills most of the viewport height
+                - Tablet  (≥640 px): 16:9 aspect ratio with min-height
+                - Desktop (≥1024px): 16:9 with comfortable min-height
+                Using padding-top trick (56.25% = 16:9) on sm+ screens.
+              */}
+              <div
+                className="relative w-full"
+                style={{
+                  /* Mobile: fixed height that fills the screen nicely */
+                  height: 'calc(100vw * 0.5625)',       /* 16:9 */
+                  minHeight: '220px',
+                  maxHeight: '70vh',
+                }}
+              >
                 {embedUrl ? (
                   <>
                     {/* Loading overlay */}
                     {!iframeLoaded && (
                       <div className="absolute inset-0 z-10 flex items-center justify-center bg-dark-950">
-                        <div className="text-center">
-                          <LoadingSpinner size="lg" text="Loading player..." />
-                        </div>
+                        <LoadingSpinner size="lg" text="Loading player..." />
                       </div>
                     )}
                     <iframe
                       src={embedUrl}
-                      className="absolute inset-0 w-full h-full"
-                      frameBorder="0"
+                      className="absolute inset-0 w-full h-full border-0"
                       allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                       allowFullScreen
                       title={`Watch ${movie.title}`}
                       onLoad={() => setIframeLoaded(true)}
                     />
-                    {/* ── Click-blocker overlay for Google Drive "open in new tab" icon ──
-                        The icon lives in the top-right corner of the iframe.
-                        We place an absolutely-positioned div over exactly that area.
-                        - pointer-events: all  → intercepts every click/touch
-                        - z-index above iframe → renders on top
-                        - sized with vw-relative clamp so it scales on all screen sizes    */}
+                    {/* Block the Google Drive "open in new tab" icon (top-right corner) */}
                     <div
                       aria-hidden="true"
                       style={{
                         position: 'absolute',
                         top: 0,
                         right: 0,
-                        /* Use fixed size to ensure it covers the fixed-size Google Drive icon on all screen sizes */
-                        width: '56px',
-                        height: '56px',
+                        width: '52px',
+                        height: '52px',
                         zIndex: 20,
                         pointerEvents: 'all',
                         cursor: 'default',
-                        background: 'rgba(0,0,0,0.85)',
+                        background: 'rgba(0,0,0,0.88)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -346,19 +362,12 @@ export default function WatchClient({ movie }: WatchClientProps) {
                       onPointerDown={(e) => e.stopPropagation()}
                       onTouchStart={(e) => e.stopPropagation()}
                     >
-                      {/* DubLK logo sits on top of the blocked area */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src="/favicon-512.png"
+                        src="/logo.png"
                         alt="DubLK"
                         draggable={false}
-                        style={{
-                          width: '44px',
-                          height: 'auto',
-                          opacity: 0.85, /* slightly more opaque to block out the icon underneath better */
-                          userSelect: 'none',
-                          pointerEvents: 'none',
-                        }}
+                        style={{ width: '40px', height: 'auto', opacity: 0.9, userSelect: 'none', pointerEvents: 'none' }}
                       />
                     </div>
                   </>
@@ -371,9 +380,7 @@ export default function WatchClient({ movie }: WatchClientProps) {
                         </svg>
                       </div>
                       <h3 className="text-lg font-semibold text-white mb-2">No Video Available</h3>
-                      <p className="text-dark-400 text-sm">
-                        This server doesn&apos;t have a video URL yet. Try switching to another server.
-                      </p>
+                      <p className="text-dark-400 text-sm">This server doesn&apos;t have a video URL yet. Try switching servers.</p>
                     </div>
                   </div>
                 )}
