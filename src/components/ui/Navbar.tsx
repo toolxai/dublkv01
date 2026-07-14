@@ -46,13 +46,13 @@ export default function Navbar() {
           <div className="flex items-center gap-4 h-16 lg:h-20">
 
             {/* Logo */}
-            <Link href="/" className="flex items-center flex-shrink-0">
+            <Link href="/" className="flex items-center flex-shrink-0 mr-2 lg:mr-6">
               <Image
                 src="/logo.png"
                 alt="dubLK"
-                width={220}
-                height={60}
-                className="h-12 lg:h-16 w-auto object-contain scale-[1.3] lg:scale-[1.5] origin-left"
+                width={280}
+                height={80}
+                className="w-36 md:w-44 lg:w-56 h-auto object-contain"
                 priority
               />
             </Link>
