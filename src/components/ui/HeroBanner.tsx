@@ -19,10 +19,9 @@ interface Movie {
 
 interface HeroBannerProps {
   movies: Movie[];
-  onSearchOpen?: () => void;
 }
 
-export default function HeroBanner({ movies, onSearchOpen }: HeroBannerProps) {
+export default function HeroBanner({ movies }: HeroBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -106,23 +105,10 @@ export default function HeroBanner({ movies, onSearchOpen }: HeroBannerProps) {
 
             {/* Description */}
             {movie.description && (
-              <p className="text-sm sm:text-base text-dark-300 leading-relaxed mb-5 max-w-xl">
+              <p className="text-sm sm:text-base text-dark-300 leading-relaxed mb-6 max-w-xl">
                 {truncate(movie.description, 200)}
               </p>
             )}
-
-            {/* Search Bar */}
-            <button
-              onClick={onSearchOpen}
-              className="w-full max-w-xl flex items-center gap-3 px-5 py-3.5 mb-5 bg-black/40 backdrop-blur-md border border-white/15 rounded-full text-dark-400 hover:text-white hover:border-white/30 hover:bg-black/55 transition-all duration-300 shadow-xl shadow-black/30 group"
-              aria-label="Search movies"
-            >
-              <svg className="w-5 h-5 flex-shrink-0 group-hover:text-brand-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span className="text-sm">Search movies &amp; TV series...</span>
-              <kbd className="ml-auto text-[10px] px-2 py-0.5 bg-white/8 border border-white/12 rounded-full text-dark-600 font-mono hidden sm:inline">⌘ K</kbd>
-            </button>
 
             {/* CTA Buttons */}
             <div className="flex items-center gap-3">
