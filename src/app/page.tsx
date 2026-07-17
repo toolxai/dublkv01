@@ -20,27 +20,16 @@ async function getMovies() {
   return movies || [];
 }
 
-function groupByGenre(movies: any[]) {
-  const genreMap: Record<string, any[]> = {};
-  movies.forEach((movie) => {
-    (movie.genres || []).forEach((genre: string) => {
-      if (!genreMap[genre]) genreMap[genre] = [];
-      genreMap[genre].push(movie);
-    });
-  });
-  return genreMap;
-}
-
 export default async function HomePage() {
   const movies = await getMovies();
 
-  // Pick top-rated movies for hero
+  // Pick top-rated movies for hero (must have backdrop)
   const heroMovies = [...movies]
     .filter((m) => m.backdrop_url)
     .sort((a, b) => (b.rating || 0) - (a.rating || 0))
     .slice(0, 5);
 
-  // Recent additions
+  // Recently added
   const recentMovies = movies.slice(0, 20);
 
   // Top rated
@@ -48,60 +37,15 @@ export default async function HomePage() {
     .sort((a, b) => (b.rating || 0) - (a.rating || 0))
     .slice(0, 20);
 
-  // Group by genre
-  const genreGroups = groupByGenre(movies);
-
-  // Genre icons
-  const genreIcons: Record<string, string> = {
-    'Animation': '🎨',
-    'Action': '💥',
-    'Adventure': '🗺️',
-    'Comedy': '😂',
-    'Family': '👨‍👩‍👧‍👦',
-    'Fantasy': '🧙',
-    'Sci-Fi': '🚀',
-    'Drama': '🎭',
-    'Thriller': '😰',
-    'Mystery': '🔍',
-    'Romance': '❤️',
-    'Crime': '🔪',
-  };
-
-  // Top genres sorted by movie count
-  const topGenres = Object.entries(genreGroups)
-    .sort((a, b) => b[1].length - a[1].length)
-    .slice(0, 8);
-
   return (
     <div>
-      {/* Hero Banner + Search Overlay */}
+      {/* Hero Banner */}
       <HomeClient heroMovies={heroMovies} />
 
-      {/* Movie Rows */}
+      {/* Movie Rows — only 2 sections */}
       <div className="relative -mt-20 z-10 space-y-10 pb-16">
-        {/* Recently Added */}
-        <MovieRow
-          title="Recently Added"
-          movies={recentMovies}
-          icon="🆕"
-        />
-
-        {/* Top Rated */}
-        <MovieRow
-          title="Top Rated"
-          movies={topRated}
-          icon="⭐"
-        />
-
-        {/* Genre Rows */}
-        {topGenres.map(([genre, genreMovies]) => (
-          <MovieRow
-            key={genre}
-            title={genre}
-            movies={genreMovies}
-            icon={genreIcons[genre] || '🎬'}
-          />
-        ))}
+        <MovieRow title="Recently Added" movies={recentMovies} icon="🆕" />
+        <MovieRow title="Top Rated" movies={topRated} icon="⭐" />
       </div>
     </div>
   );

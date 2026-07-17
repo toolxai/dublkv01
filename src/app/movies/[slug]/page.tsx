@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getMovieCredits, type TMDBCredits } from '@/lib/tmdb';
 import MovieDetailClient from './MovieDetailClient';
 
 export const revalidate = 60;
@@ -61,7 +62,11 @@ export default async function MovieDetailPage({ params }: Props) {
   const movie = await getMovie(params.slug);
   if (!movie) notFound();
 
-  const relatedMovies = await getRelatedMovies(movie.genres || [], movie.id);
+  // Fetch credits + related movies in parallel; credits failure is non-fatal
+  const [relatedMovies, credits] = await Promise.all([
+    getRelatedMovies(movie.genres || [], movie.id),
+    movie.tmdb_id ? getMovieCredits(movie.tmdb_id).catch(() => ({ cast: [], crew: [] } as TMDBCredits)) : Promise.resolve({ cast: [], crew: [] } as TMDBCredits),
+  ]);
 
-  return <MovieDetailClient movie={movie} relatedMovies={relatedMovies} />;
+  return <MovieDetailClient movie={movie} relatedMovies={relatedMovies} credits={credits} />;
 }

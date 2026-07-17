@@ -46,7 +46,7 @@ export default function HeroBanner({ movies }: HeroBannerProps) {
   const movie = movies[currentIndex];
 
   return (
-    <section className="relative h-[70vh] sm:h-[80vh] lg:h-[85vh] w-full overflow-hidden">
+    <section className="relative h-[60vh] sm:h-[70vh] lg:h-[75vh] w-full overflow-hidden">
       {/* Background Image */}
       <div className={`absolute inset-0 transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
         {movie.backdrop_url ? (
@@ -54,7 +54,7 @@ export default function HeroBanner({ movies }: HeroBannerProps) {
             src={movie.backdrop_url}
             alt={movie.title}
             fill
-            className="object-cover"
+            className="object-cover object-center"
             priority
             sizes="100vw"
           />
@@ -65,11 +65,11 @@ export default function HeroBanner({ movies }: HeroBannerProps) {
 
       {/* Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-r from-dark-950 via-dark-950/60 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/10 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-dark-950 to-transparent" />
 
-      {/* Content */}
-      <div className="relative h-full flex items-end pb-24 sm:pb-32 lg:pb-36">
+      {/* Content — centred vertically so it sits high, not at the very bottom */}
+      <div className="relative h-full flex items-center pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className={`max-w-2xl transition-all duration-500 ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
             {/* Sinhala Dubbed Badge */}

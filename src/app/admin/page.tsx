@@ -7,6 +7,12 @@ import { useToast } from '@/components/ui/Toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { timeAgo, formatCurrency } from '@/lib/utils';
 
+interface StreamServer {
+  url: string;
+  label: string;
+  enabled: boolean;
+}
+
 interface Movie {
   id: string;
   title: string;
@@ -16,6 +22,8 @@ interface Movie {
   bunny_video_id: string | null;
   server1_url: string | null;
   server2_url: string | null;
+  free_servers: StreamServer[] | null;
+  vip_servers: StreamServer[] | null;
   poster_url: string | null;
   description: string | null;
   runtime: number | null;
@@ -62,11 +70,12 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingMovie, setEditingMovie] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{
-    server1_url: string;
+    free_servers: StreamServer[];
+    vip_servers: StreamServer[];
     bunny_video_id: string;
     runtime: string;
     description: string;
-  }>({ server1_url: '', bunny_video_id: '', runtime: '', description: '' });
+  }>({ free_servers: [], vip_servers: [], bunny_video_id: '', runtime: '', description: '' });
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   // Delete confirmation
@@ -235,8 +244,17 @@ export default function AdminPage() {
   // Start editing movie
   const startEdit = (movie: Movie) => {
     setEditingMovie(movie.id);
+    // Build free_servers from new column or legacy columns
+    let freeServers: StreamServer[] = [];
+    if (movie.free_servers && movie.free_servers.length > 0) {
+      freeServers = [...movie.free_servers];
+    } else {
+      if (movie.server1_url) freeServers.push({ url: movie.server1_url, label: 'Server 1', enabled: true });
+      if (movie.server2_url) freeServers.push({ url: movie.server2_url, label: 'Server 2', enabled: true });
+    }
     setEditForm({
-      server1_url: movie.server1_url || '',
+      free_servers: freeServers,
+      vip_servers: movie.vip_servers ? [...movie.vip_servers] : [],
       bunny_video_id: movie.bunny_video_id || '',
       runtime: movie.runtime?.toString() || '',
       description: movie.description || '',
@@ -245,30 +263,39 @@ export default function AdminPage() {
     setDeleteConfirm(null);
   };
 
+  // Helper: update a server in a list
+  const updateServer = (type: 'free' | 'vip', idx: number, field: keyof StreamServer, value: string | boolean) => {
+    const key = type === 'free' ? 'free_servers' : 'vip_servers';
+    const servers = [...editForm[key]];
+    servers[idx] = { ...servers[idx], [field]: value };
+    setEditForm({ ...editForm, [key]: servers });
+  };
+
+  const addServer = (type: 'free' | 'vip') => {
+    const key = type === 'free' ? 'free_servers' : 'vip_servers';
+    const servers = editForm[key];
+    if (servers.length >= 3) return;
+    setEditForm({ ...editForm, [key]: [...servers, { url: '', label: `Server ${servers.length + 1}`, enabled: true }] });
+  };
+
+  const removeServer = (type: 'free' | 'vip', idx: number) => {
+    const key = type === 'free' ? 'free_servers' : 'vip_servers';
+    setEditForm({ ...editForm, [key]: editForm[key].filter((_, i) => i !== idx) });
+  };
+
   // Save movie edits
   const saveEdit = async (movie: Movie) => {
     setActionLoading(movie.id);
     setSaveMessage(null);
     try {
-      const updates: Record<string, any> = { id: movie.id };
-
-      if (editForm.server1_url !== (movie.server1_url || '')) {
-        updates.server1_url = editForm.server1_url || null;
-      }
-      if (editForm.bunny_video_id !== (movie.bunny_video_id || '')) {
-        updates.bunny_video_id = editForm.bunny_video_id || null;
-      }
-      if (editForm.runtime !== (movie.runtime?.toString() || '')) {
-        updates.runtime = editForm.runtime ? parseInt(editForm.runtime) : null;
-      }
-      if (editForm.description !== (movie.description || '')) {
-        updates.description = editForm.description || null;
-      }
-
-      if (Object.keys(updates).length <= 1) {
-        setEditingMovie(null);
-        return;
-      }
+      const updates: Record<string, any> = {
+        id: movie.id,
+        free_servers: editForm.free_servers.filter(s => s.url.trim()),
+        vip_servers: editForm.vip_servers.filter(s => s.url.trim()),
+        bunny_video_id: editForm.bunny_video_id || null,
+        runtime: editForm.runtime ? parseInt(editForm.runtime) : null,
+        description: editForm.description || null,
+      };
 
       const res = await fetch('/api/admin/movies', {
         method: 'PATCH',
@@ -559,26 +586,132 @@ export default function AdminPage() {
 
                   {/* Edit Panel (expandable) */}
                   {editingMovie === movie.id && (
-                    <div className="border-t border-white/5 p-4 bg-dark-900/50">
-                      {/* Server 1 URL - Primary */}
-                      <div className="mb-4 p-3 rounded-xl bg-brand-500/5 border border-brand-500/15">
-                        <label className="block text-xs font-medium text-brand-300 mb-1.5">
-                          🎬 Server 1 — Google Drive URL
-                        </label>
-                        <input
-                          type="text"
-                          value={editForm.server1_url}
-                          onChange={(e) => setEditForm({ ...editForm, server1_url: e.target.value })}
-                          placeholder="https://drive.google.com/file/d/FILE_ID/view?usp=sharing"
-                          className="w-full px-3 py-2.5 rounded-lg bg-dark-900 border border-brand-500/20 text-white text-sm placeholder-dark-600 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
-                        />
-                        <p className="text-[10px] text-dark-500 mt-1">
-                          Paste any Google Drive share link — the player handles embedding automatically
-                        </p>
+                    <div className="border-t border-white/5 p-4 bg-dark-900/50 space-y-5">
+
+                      {/* FREE Streaming Servers */}
+                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h3 className="text-sm font-semibold text-emerald-300">🎬 FREE Streaming Servers</h3>
+                            <p className="text-[10px] text-emerald-500/70 mt-0.5">Up to 3 servers — no login required for viewers</p>
+                          </div>
+                          {editForm.free_servers.length < 3 && (
+                            <button
+                              onClick={() => addServer('free')}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all"
+                            >
+                              + Add Server
+                            </button>
+                          )}
+                        </div>
+                        {editForm.free_servers.length === 0 && (
+                          <p className="text-xs text-dark-500 italic">No free servers yet. Click + Add Server.</p>
+                        )}
+                        <div className="space-y-3">
+                          {editForm.free_servers.map((server, idx) => (
+                            <div key={idx} className="flex items-start gap-2 p-3 rounded-lg bg-dark-900/60 border border-white/5">
+                              <div className="flex-1 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={server.label}
+                                    onChange={(e) => updateServer('free', idx, 'label', e.target.value)}
+                                    className="w-28 px-2 py-1 rounded text-xs bg-white/5 border border-white/10 text-white placeholder-dark-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                                    placeholder="Label"
+                                  />
+                                  <button
+                                    onClick={() => updateServer('free', idx, 'enabled', !server.enabled)}
+                                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                                      server.enabled
+                                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                        : 'bg-dark-700 text-dark-500 border border-white/5'
+                                    }`}
+                                  >
+                                    {server.enabled ? '● Enabled' : '○ Disabled'}
+                                  </button>
+                                </div>
+                                <input
+                                  type="text"
+                                  value={server.url}
+                                  onChange={(e) => updateServer('free', idx, 'url', e.target.value)}
+                                  className="w-full px-2 py-1.5 rounded text-xs bg-white/5 border border-white/10 text-white placeholder-dark-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                                  placeholder="https://drive.google.com/file/d/FILE_ID/view"
+                                />
+                              </div>
+                              <button
+                                onClick={() => removeServer('free', idx)}
+                                className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0 mt-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                        {/* Bunny Video ID (optional fallback) */}
+                      {/* VIP Streaming Servers */}
+                      <div className="rounded-xl border border-brand-500/20 bg-brand-500/5 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h3 className="text-sm font-semibold text-brand-300">⚡ VIP Streaming Servers</h3>
+                            <p className="text-[10px] text-brand-500/70 mt-0.5">Up to 3 servers — requires VIP subscription</p>
+                          </div>
+                          {editForm.vip_servers.length < 3 && (
+                            <button
+                              onClick={() => addServer('vip')}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 hover:bg-brand-500/30 transition-all"
+                            >
+                              + Add Server
+                            </button>
+                          )}
+                        </div>
+                        {editForm.vip_servers.length === 0 && (
+                          <p className="text-xs text-dark-500 italic">No VIP servers yet. VIP falls back to free servers if empty.</p>
+                        )}
+                        <div className="space-y-3">
+                          {editForm.vip_servers.map((server, idx) => (
+                            <div key={idx} className="flex items-start gap-2 p-3 rounded-lg bg-dark-900/60 border border-white/5">
+                              <div className="flex-1 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={server.label}
+                                    onChange={(e) => updateServer('vip', idx, 'label', e.target.value)}
+                                    className="w-28 px-2 py-1 rounded text-xs bg-white/5 border border-white/10 text-white placeholder-dark-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+                                    placeholder="Label"
+                                  />
+                                  <button
+                                    onClick={() => updateServer('vip', idx, 'enabled', !server.enabled)}
+                                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                                      server.enabled
+                                        ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
+                                        : 'bg-dark-700 text-dark-500 border border-white/5'
+                                    }`}
+                                  >
+                                    {server.enabled ? '● Enabled' : '○ Disabled'}
+                                  </button>
+                                </div>
+                                <input
+                                  type="text"
+                                  value={server.url}
+                                  onChange={(e) => updateServer('vip', idx, 'url', e.target.value)}
+                                  className="w-full px-2 py-1.5 rounded text-xs bg-white/5 border border-white/10 text-white placeholder-dark-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+                                  placeholder="https://drive.google.com/file/d/FILE_ID/view"
+                                />
+                              </div>
+                              <button
+                                onClick={() => removeServer('vip', idx)}
+                                className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0 mt-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Metadata */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-medium text-dark-300 mb-1.5">
                             🐰 Bunny.net Video ID <span className="text-dark-600">(optional fallback)</span>
@@ -591,12 +724,8 @@ export default function AdminPage() {
                             className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
                           />
                         </div>
-
-                        {/* Runtime */}
                         <div>
-                          <label className="block text-xs font-medium text-dark-300 mb-1.5">
-                            ⏱️ Runtime (minutes)
-                          </label>
+                          <label className="block text-xs font-medium text-dark-300 mb-1.5">⏱️ Runtime (minutes)</label>
                           <input
                             type="number"
                             value={editForm.runtime}
@@ -607,11 +736,8 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Description */}
-                      <div className="mb-4">
-                        <label className="block text-xs font-medium text-dark-300 mb-1.5">
-                          📝 Description
-                        </label>
+                      <div>
+                        <label className="block text-xs font-medium text-dark-300 mb-1.5">📝 Description</label>
                         <textarea
                           value={editForm.description}
                           onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
@@ -621,7 +747,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => saveEdit(movie)}
@@ -642,8 +768,6 @@ export default function AdminPage() {
                             </span>
                           )}
                         </div>
-
-                        {/* Delete Button */}
                         <div className="flex items-center gap-2">
                           {deleteConfirm === movie.id ? (
                             <>

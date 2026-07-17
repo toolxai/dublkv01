@@ -11,6 +11,7 @@ interface PricingModalProps {
   onClose: () => void;
   movieId: string;
   movieTitle: string;
+  movieSlug: string;
 }
 
 const PAYMENT_METHODS = [
@@ -22,7 +23,7 @@ const PAYMENT_METHODS = [
 
 type Step = 'plans' | 'payment' | 'proof';
 
-export default function PricingModal({ isOpen, onClose, movieId, movieTitle }: PricingModalProps) {
+export default function PricingModal({ isOpen, onClose, movieId, movieTitle, movieSlug }: PricingModalProps) {
   const { user, openAuthModal } = useAuth();
   const { showToast } = useToast();
   const [step, setStep] = useState<Step>('plans');
@@ -38,33 +39,10 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle }: P
 
   if (!isOpen) return null;
 
-  const handleFreeTrial = async () => {
-    if (!user) {
-      openAuthModal(() => {
-        // After sign-in, they can re-click free trial
-      });
-      return;
-    }
-
-    setTrialLoading(true);
-    try {
-      const res = await fetch('/api/free-trial', { method: 'POST' });
-      const data = await res.json();
-
-      if (res.ok) {
-        showToast('🎉 Free trial activated! Enjoy 3 days of unlimited access.', 'success');
-        handleClose();
-      } else if (res.status === 409) {
-        showToast(data.error || 'Free trial already used', 'info');
-        handleClose();
-      } else {
-        showToast(data.error || 'Failed to activate trial', 'error');
-      }
-    } catch {
-      showToast('Something went wrong. Try again.', 'error');
-    } finally {
-      setTrialLoading(false);
-    }
+  const handleFreeTrial = () => {
+    // "Continue with Free" — no login needed, redirect to free watch with ads
+    handleClose();
+    window.location.href = `/watch/${movieSlug}?mode=free`;
   };
 
   const handleSelectPlan = (plan: 'single' | 'full') => {
@@ -226,11 +204,10 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle }: P
 
                     <div className="space-y-3">
 
-                      {/* FREE Plan — totally free, just sign up */}
+                      {/* FREE / Continue with Free */}
                       <button
                         onClick={handleFreeTrial}
-                        disabled={trialLoading}
-                        className="w-full p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/60 hover:bg-emerald-500/10 text-left transition-all duration-200 relative overflow-hidden disabled:opacity-70"
+                        className="w-full p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/60 hover:bg-emerald-500/10 text-left transition-all duration-200 relative overflow-hidden"
                       >
                         <div className="absolute -top-px -right-px px-3 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-bl-xl">
                           FREE
@@ -239,31 +216,26 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle }: P
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-lg">🎬</span>
-                              <h3 className="text-base font-semibold text-white">Free — Watch All Movies</h3>
+                              <h3 className="text-base font-semibold text-white">Continue with Free</h3>
                             </div>
-                            <p className="text-xs text-dark-400">Access to all movies — completely free, forever</p>
+                            <p className="text-xs text-dark-400">Watch instantly — no sign-up required</p>
                             <div className="flex flex-col gap-0.5 mt-1.5">
                               <p className="text-[11px] text-emerald-400 flex items-center gap-1">
                                 <span>✓</span> All movies — no payment ever
                               </p>
                               <p className="text-[11px] text-emerald-400 flex items-center gap-1">
-                                <span>✓</span> Just sign up &amp; watch
+                                <span>✓</span> No sign-up needed
                               </p>
                               <p className="text-[11px] text-dark-500 flex items-center gap-1">
-                                <span>✗</span> New releases &amp; TV series (VIP only)
+                                <span>✗</span> Includes ads
                               </p>
                             </div>
                           </div>
                           <div className="text-right ml-4 flex-shrink-0">
                             <p className="text-3xl font-bold text-emerald-400">FREE</p>
-                            <p className="text-[10px] text-dark-500">forever</p>
+                            <p className="text-[10px] text-dark-500">with ads</p>
                           </div>
                         </div>
-                        {trialLoading && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-dark-900/60 rounded-xl">
-                            <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        )}
                       </button>
 
                       {/* VIP — Rs.100 Lifetime */}
