@@ -16,7 +16,7 @@ async function getMovie(slug: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('movies')
-    .select('id, title, slug, bunny_video_id, server1_url, server2_url, free_servers, vip_servers, poster_url, backdrop_url, rating, release_year, runtime, genres')
+    .select('*')
     .eq('slug', slug)
     .eq('is_published', true)
     .single();
