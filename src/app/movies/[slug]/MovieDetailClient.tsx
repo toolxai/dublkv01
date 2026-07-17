@@ -213,7 +213,7 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                                   src={`${TMDB_IMAGE_BASE}/w185${person.profile_path}`}
                                   alt={person.name}
                                   fill
-                                  className="object-cover"
+                                  className="object-cover rounded-full"
                                   sizes="80px"
                                 />
                               ) : (
@@ -260,7 +260,7 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                                   alt={person.name}
                                   width={32}
                                   height={32}
-                                  className="object-cover w-full h-full"
+                                  className="object-cover w-full h-full rounded-full"
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-dark-700">
