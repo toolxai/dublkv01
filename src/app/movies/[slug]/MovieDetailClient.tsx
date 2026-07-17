@@ -148,7 +148,7 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                 {/* ── Watch Now (With Ads) ── */}
                 <button
                   onClick={handleWatchFree}
-                  className="group flex flex-col sm:w-[260px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] active:scale-[0.97]"
+                  className="group flex flex-col sm:w-[220px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] active:scale-[0.97]"
                 >
                   {/* Row 1: Badge (right-aligned, flush top) */}
                   <div className="flex justify-end">
@@ -168,7 +168,7 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                 {/* ── Watch Now (Without Ads) ── */}
                 <button
                   onClick={handleWatchVip}
-                  className="group flex flex-col sm:w-[260px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-[#d904c9] hover:bg-[#ff00d4] shadow-[0_0_20px_rgba(217,4,201,0.4)] hover:shadow-[0_0_30px_rgba(217,4,201,0.6)] active:scale-[0.97]"
+                  className="group flex flex-col sm:w-[220px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-[#d904c9] hover:bg-[#ff00d4] shadow-[0_0_20px_rgba(217,4,201,0.4)] hover:shadow-[0_0_30px_rgba(217,4,201,0.6)] active:scale-[0.97]"
                 >
                   {/* Row 1: Badge (right-aligned, flush top) */}
                   <div className="flex justify-end">
