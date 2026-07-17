@@ -71,7 +71,7 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
   return (
     <div className="page-enter">
       {/* Hero Section — compact, content pushed up */}
-      <section className="relative h-[42vh] sm:h-[52vh] w-full overflow-hidden">
+      <section className="relative h-[35vh] sm:h-[45vh] lg:h-[50vh] w-full overflow-hidden">
         {movie.backdrop_url ? (
           <Image
             src={movie.backdrop_url}
@@ -85,11 +85,11 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
           <div className="w-full h-full bg-dark-900" />
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-dark-950 via-dark-950/70 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/40 to-dark-950/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/50 to-dark-950/10" />
       </section>
 
       {/* Content — overlaps hero with larger negative margin */}
-      <div className="relative -mt-56 sm:-mt-64 z-10">
+      <div className="relative -mt-48 sm:-mt-56 lg:-mt-64 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Poster */}
@@ -145,34 +145,13 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
               {/* Two-button action row */}
               <div className="flex flex-wrap items-center gap-4 mt-2">
 
-                {/* ── Watch Now (With Ads) ── magenta glow pill */}
+                {/* ── Watch Now (With Ads) ── */}
                 <button
                   onClick={handleWatchFree}
-                  className="relative group inline-flex items-center gap-3 px-8 py-3.5 rounded-2xl font-bold text-white text-base transition-all duration-300"
-                  style={{
-                    background: 'linear-gradient(135deg, #e600cc, #ff00d4)',
-                    boxShadow: '0 0 24px 4px rgba(230,0,204,0.55), 0 4px 20px rgba(230,0,204,0.35)',
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                      '0 0 36px 8px rgba(230,0,204,0.75), 0 4px 28px rgba(230,0,204,0.5)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                      '0 0 24px 4px rgba(230,0,204,0.55), 0 4px 20px rgba(230,0,204,0.35)';
-                  }}
+                  className="relative overflow-hidden group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white text-base transition-all duration-300 bg-emerald-600 hover:bg-emerald-500 shadow-md hover:shadow-emerald-500/25 border border-emerald-500/20"
                 >
-                  {/* floating "With Ads" corner badge */}
-                  <span
-                    className="absolute -top-2.5 right-3 px-2.5 py-0.5 text-[10px] font-semibold rounded-md tracking-wider"
-                    style={{
-                      background: 'rgba(10,10,18,0.90)',
-                      border: '1px solid rgba(230,0,204,0.35)',
-                      color: '#f472f0',
-                      backdropFilter: 'blur(4px)',
-                    }}
-                  >
-                    With Ads
+                  <span className="absolute top-0 right-0 px-2.5 py-0.5 bg-emerald-800/90 text-[9px] font-bold tracking-wider rounded-bl-lg text-emerald-100 border-b border-l border-emerald-500/30 backdrop-blur-sm">
+                    WITH ADS
                   </span>
                   <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
@@ -180,34 +159,13 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                   Watch Now
                 </button>
 
-                {/* ── Watch Now (Without Ads) ── indigo/violet glow pill */}
+                {/* ── Watch Now (Without Ads) ── */}
                 <button
                   onClick={handleWatchVip}
-                  className="relative group inline-flex items-center gap-3 px-8 py-3.5 rounded-2xl font-bold text-white text-base transition-all duration-300"
-                  style={{
-                    background: 'linear-gradient(135deg, #4c1d95, #6d28d9)',
-                    boxShadow: '0 0 22px 3px rgba(109,40,217,0.5), 0 4px 18px rgba(109,40,217,0.3)',
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                      '0 0 34px 7px rgba(139,92,246,0.65), 0 4px 26px rgba(139,92,246,0.45)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                      '0 0 22px 3px rgba(109,40,217,0.5), 0 4px 18px rgba(109,40,217,0.3)';
-                  }}
+                  className="relative overflow-hidden group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white text-base transition-all duration-300 bg-brand-600 hover:bg-brand-500 shadow-md hover:shadow-brand-500/25 border border-brand-500/20"
                 >
-                  {/* floating "Without Ads" badge */}
-                  <span
-                    className="absolute -top-2.5 right-3 px-2.5 py-0.5 text-[10px] font-semibold rounded-md tracking-wider"
-                    style={{
-                      background: 'rgba(10,10,18,0.90)',
-                      border: '1px solid rgba(109,40,217,0.40)',
-                      color: '#a78bfa',
-                      backdropFilter: 'blur(4px)',
-                    }}
-                  >
-                    No Ads · VIP
+                  <span className="absolute top-0 right-0 px-2.5 py-0.5 bg-brand-800/90 text-[9px] font-bold tracking-wider rounded-bl-lg text-brand-100 border-b border-l border-brand-500/30 backdrop-blur-sm">
+                    NO ADS • VIP
                   </span>
                   <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
@@ -230,38 +188,30 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-4">
                     {credits.cast.map((person) => (
                       <div key={person.id} className="text-center group cursor-default">
-                        {/* Avatar — no white border; gradient ring + glow on hover */}
+                        {/* Avatar */}
                         <div
                           className="relative mx-auto mb-2 max-w-[80px] transition-transform duration-300 group-hover:scale-105"
                           style={{ width: '80px', height: '80px' }}
                         >
-                          {/* Gradient ring shell */}
-                          <div
-                            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                            style={{
-                              background: 'linear-gradient(135deg, #e600cc, #6d28d9)',
-                              padding: '2px',
-                              borderRadius: '9999px',
-                              filter: 'blur(0px)',
-                              boxShadow: '0 0 14px 3px rgba(230,0,204,0.45)',
-                            }}
-                          />
-                          <div className="absolute inset-[2px] rounded-full overflow-hidden bg-dark-800 group-hover:shadow-[0_0_12px_2px_rgba(230,0,204,0.30)] transition-shadow duration-300">
-                            {person.profile_path ? (
-                              <Image
-                                src={`${TMDB_IMAGE_BASE}/w185${person.profile_path}`}
-                                alt={person.name}
-                                fill
-                                className="object-cover"
-                                sizes="80px"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <svg className="w-8 h-8 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                              </div>
-                            )}
+                          {/* Gradient ring */}
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-emerald-500/30 to-brand-500/30 p-[2px] group-hover:from-emerald-400 group-hover:to-brand-400 transition-all duration-300">
+                            <div className="w-full h-full rounded-full overflow-hidden bg-dark-800">
+                              {person.profile_path ? (
+                                <Image
+                                  src={`${TMDB_IMAGE_BASE}/w185${person.profile_path}`}
+                                  alt={person.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="80px"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <svg className="w-8 h-8 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <p className="text-xs font-medium text-white leading-tight truncate">{person.name}</p>
@@ -285,34 +235,29 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                         key={`${person.id}-${i}`}
                         className="group flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] hover:border-brand-500/30 hover:bg-white/[0.07] transition-all duration-200"
                       >
-                        {/* Crew avatar — gradient ring on hover */}
+                        {/* Crew avatar */}
                         <div
                           className="relative flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
                           style={{ width: '36px', height: '36px' }}
                         >
-                          <div
-                            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                            style={{
-                              background: 'linear-gradient(135deg, #e600cc, #6d28d9)',
-                              boxShadow: '0 0 8px 2px rgba(230,0,204,0.4)',
-                            }}
-                          />
-                          <div className="absolute inset-[2px] rounded-full overflow-hidden bg-dark-800">
-                            {person.profile_path ? (
-                              <Image
-                                src={`${TMDB_IMAGE_BASE}/w45${person.profile_path}`}
-                                alt={person.name}
-                                width={32}
-                                height={32}
-                                className="object-cover w-full h-full"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-dark-700">
-                                <svg className="w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                              </div>
-                            )}
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-emerald-500/30 to-brand-500/30 p-[2px] group-hover:from-emerald-400 group-hover:to-brand-400 transition-all duration-300">
+                            <div className="w-full h-full rounded-full overflow-hidden bg-dark-800">
+                              {person.profile_path ? (
+                                <Image
+                                  src={`${TMDB_IMAGE_BASE}/w45${person.profile_path}`}
+                                  alt={person.name}
+                                  width={32}
+                                  height={32}
+                                  className="object-cover w-full h-full"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-dark-700">
+                                  <svg className="w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div>
