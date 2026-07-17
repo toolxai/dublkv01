@@ -148,29 +148,29 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                 {/* ── Watch Now (With Ads) ── */}
                 <button
                   onClick={handleWatchFree}
-                  className="relative overflow-hidden group flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-8 pt-5 sm:pt-4 pb-3 sm:pb-3.5 rounded-xl font-bold text-white text-[12px] sm:text-base transition-all duration-300 bg-emerald-600 hover:bg-emerald-500 shadow-md hover:shadow-emerald-500/25 border border-emerald-500/20"
+                  className="relative overflow-hidden group flex-1 sm:flex-none flex items-center justify-start gap-1.5 sm:gap-2 pl-3 sm:pl-6 pr-12 sm:pr-24 py-3 sm:py-3.5 rounded-xl font-bold text-white text-[12px] sm:text-base transition-all duration-300 bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] border border-emerald-500/20"
                 >
-                  <span className="absolute top-0 right-0 px-1.5 sm:px-2.5 py-0.5 bg-emerald-800 text-[8px] sm:text-[9px] font-bold tracking-wider rounded-bl-lg text-emerald-100 border-b border-l border-emerald-500/30 backdrop-blur-sm">
+                  <span className="absolute top-0 right-0 px-1.5 sm:px-2.5 py-0.5 bg-emerald-800 text-[8px] sm:text-[9px] font-bold tracking-wider rounded-bl-lg text-emerald-100 border-b border-l border-emerald-500/30 backdrop-blur-sm z-10">
                     WITH ADS
                   </span>
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 relative z-10" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                   </svg>
-                  <span className="whitespace-nowrap">Watch Now</span>
+                  <span className="whitespace-nowrap relative z-10">Watch Now</span>
                 </button>
 
                 {/* ── Watch Now (Without Ads) ── */}
                 <button
                   onClick={handleWatchVip}
-                  className="relative overflow-hidden group flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-8 pt-5 sm:pt-4 pb-3 sm:pb-3.5 rounded-xl font-bold text-white text-[12px] sm:text-base transition-all duration-300 bg-[#d904c9] hover:bg-[#ff00d4] shadow-md hover:shadow-[#d904c9]/25 border border-[#d904c9]/20"
+                  className="relative overflow-hidden group flex-1 sm:flex-none flex items-center justify-start gap-1.5 sm:gap-2 pl-3 sm:pl-6 pr-16 sm:pr-28 py-3 sm:py-3.5 rounded-xl font-bold text-white text-[12px] sm:text-base transition-all duration-300 bg-[#d904c9] hover:bg-[#ff00d4] shadow-[0_0_15px_rgba(217,4,201,0.3)] hover:shadow-[0_0_20px_rgba(217,4,201,0.5)] border border-[#d904c9]/20"
                 >
-                  <span className="absolute top-0 right-0 px-1.5 sm:px-2.5 py-0.5 bg-[#66015e]/90 text-[8px] sm:text-[9px] font-bold tracking-wider rounded-bl-lg text-white border-b border-l border-[#ff00d4]/30 backdrop-blur-sm">
+                  <span className="absolute top-0 right-0 px-1.5 sm:px-2.5 py-0.5 bg-[#66015e]/90 text-[8px] sm:text-[9px] font-bold tracking-wider rounded-bl-lg text-white border-b border-l border-[#ff00d4]/30 backdrop-blur-sm z-10">
                     NO ADS • VIP
                   </span>
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 relative z-10" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                   </svg>
-                  <span className="whitespace-nowrap">Watch Now</span>
+                  <span className="whitespace-nowrap relative z-10">Watch Now</span>
                 </button>
 
               </div>
