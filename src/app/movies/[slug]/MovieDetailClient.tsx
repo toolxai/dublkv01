@@ -143,34 +143,34 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
               )}
 
               {/* Two-button action row */}
-              <div className="flex flex-wrap items-center gap-4 mt-2">
+              <div className="flex flex-row items-center gap-2 sm:gap-4 mt-2 w-full sm:w-auto">
 
                 {/* ── Watch Now (With Ads) ── */}
                 <button
                   onClick={handleWatchFree}
-                  className="relative overflow-hidden group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white text-base transition-all duration-300 bg-emerald-600 hover:bg-emerald-500 shadow-md hover:shadow-emerald-500/25 border border-emerald-500/20"
+                  className="relative overflow-hidden group flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-8 pt-5 sm:pt-4 pb-3 sm:pb-3.5 rounded-xl font-bold text-white text-[12px] sm:text-base transition-all duration-300 bg-emerald-600 hover:bg-emerald-500 shadow-md hover:shadow-emerald-500/25 border border-emerald-500/20"
                 >
-                  <span className="absolute top-0 right-0 px-2.5 py-0.5 bg-emerald-800/90 text-[9px] font-bold tracking-wider rounded-bl-lg text-emerald-100 border-b border-l border-emerald-500/30 backdrop-blur-sm">
+                  <span className="absolute top-0 right-0 px-1.5 sm:px-2.5 py-0.5 bg-emerald-800 text-[8px] sm:text-[9px] font-bold tracking-wider rounded-bl-lg text-emerald-100 border-b border-l border-emerald-500/30 backdrop-blur-sm">
                     WITH ADS
                   </span>
-                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                   </svg>
-                  Watch Now
+                  <span className="whitespace-nowrap">Watch Now</span>
                 </button>
 
                 {/* ── Watch Now (Without Ads) ── */}
                 <button
                   onClick={handleWatchVip}
-                  className="relative overflow-hidden group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white text-base transition-all duration-300 bg-brand-600 hover:bg-brand-500 shadow-md hover:shadow-brand-500/25 border border-brand-500/20"
+                  className="relative overflow-hidden group flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-8 pt-5 sm:pt-4 pb-3 sm:pb-3.5 rounded-xl font-bold text-white text-[12px] sm:text-base transition-all duration-300 bg-[#d904c9] hover:bg-[#ff00d4] shadow-md hover:shadow-[#d904c9]/25 border border-[#d904c9]/20"
                 >
-                  <span className="absolute top-0 right-0 px-2.5 py-0.5 bg-brand-800/90 text-[9px] font-bold tracking-wider rounded-bl-lg text-brand-100 border-b border-l border-brand-500/30 backdrop-blur-sm">
+                  <span className="absolute top-0 right-0 px-1.5 sm:px-2.5 py-0.5 bg-[#66015e]/90 text-[8px] sm:text-[9px] font-bold tracking-wider rounded-bl-lg text-white border-b border-l border-[#ff00d4]/30 backdrop-blur-sm">
                     NO ADS • VIP
                   </span>
-                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                   </svg>
-                  Watch Now
+                  <span className="whitespace-nowrap">Watch Now</span>
                 </button>
 
               </div>
