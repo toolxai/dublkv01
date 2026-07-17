@@ -143,37 +143,43 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
               )}
 
               {/* Two-button action row */}
-              <div className="flex flex-row items-center gap-2 sm:gap-4 mt-2 w-full sm:w-auto">
+              <div className="flex flex-row items-center gap-3 sm:gap-5 mt-4 w-full sm:w-auto">
 
                 {/* ── Watch Now (With Ads) ── */}
                 <button
                   onClick={handleWatchFree}
-                  className="relative overflow-hidden group flex-1 sm:flex-none flex items-center justify-center pt-4 pb-3 sm:py-3.5 rounded-xl font-bold text-white transition-all duration-300 bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] border border-emerald-500/20"
+                  className="relative group flex-1 sm:flex-none flex items-center justify-center h-[64px] sm:h-[72px] sm:w-[240px] rounded-xl sm:rounded-2xl font-bold text-white transition-all duration-300 bg-emerald-600 hover:bg-emerald-500 hover:-translate-y-0.5 shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:shadow-[0_8px_25px_rgba(16,185,129,0.4)] border border-emerald-500/30 overflow-hidden"
                 >
-                  <span className="absolute top-0 right-0 px-2 sm:px-2.5 py-0.5 bg-emerald-800 text-[8px] sm:text-[9px] font-bold tracking-wider rounded-bl-lg text-emerald-100 border-b border-l border-emerald-500/30 z-10">
+                  <div className="absolute inset-0 border border-white/20 rounded-xl sm:rounded-2xl pointer-events-none"></div>
+
+                  <span className="absolute top-0 right-0 px-2 sm:px-3 py-1 bg-emerald-950/80 text-[8px] sm:text-[9px] font-black tracking-widest rounded-bl-xl sm:rounded-bl-2xl text-emerald-300 border-b border-l border-emerald-500/40 backdrop-blur-md z-10">
                     WITH ADS
                   </span>
-                  <div className="flex items-center gap-1.5 sm:gap-2 pr-12 sm:pr-20 pl-4 sm:pl-6">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+
+                  <div className="flex items-center gap-2 mt-2 z-10">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow-md" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                     </svg>
-                    <span className="whitespace-nowrap text-[12px] sm:text-base">Watch Now</span>
+                    <span className="whitespace-nowrap text-sm sm:text-lg drop-shadow-md">Watch Now</span>
                   </div>
                 </button>
 
                 {/* ── Watch Now (Without Ads) ── */}
                 <button
                   onClick={handleWatchVip}
-                  className="relative overflow-hidden group flex-1 sm:flex-none flex items-center justify-center pt-4 pb-3 sm:py-3.5 rounded-xl font-bold text-white transition-all duration-300 bg-[#d904c9] hover:bg-[#ff00d4] shadow-[0_0_15px_rgba(217,4,201,0.3)] hover:shadow-[0_0_20px_rgba(217,4,201,0.5)] border border-[#d904c9]/20"
+                  className="relative group flex-1 sm:flex-none flex items-center justify-center h-[64px] sm:h-[72px] sm:w-[240px] rounded-xl sm:rounded-2xl font-bold text-white transition-all duration-300 bg-[#d904c9] hover:bg-[#ff00d4] hover:-translate-y-0.5 shadow-[0_4px_20px_rgba(217,4,201,0.3)] hover:shadow-[0_8px_25px_rgba(217,4,201,0.4)] border border-[#ff00d4]/30 overflow-hidden"
                 >
-                  <span className="absolute top-0 right-0 px-2 sm:px-2.5 py-0.5 bg-[#66015e]/90 text-[8px] sm:text-[9px] font-bold tracking-wider rounded-bl-lg text-white border-b border-l border-[#ff00d4]/30 z-10">
+                  <div className="absolute inset-0 border border-white/20 rounded-xl sm:rounded-2xl pointer-events-none"></div>
+
+                  <span className="absolute top-0 right-0 px-2 sm:px-3 py-1 bg-[#4a0145]/90 text-[8px] sm:text-[9px] font-black tracking-widest rounded-bl-xl sm:rounded-bl-2xl text-[#ff80ea] border-b border-l border-[#ff00d4]/40 backdrop-blur-md z-10">
                     NO ADS • VIP
                   </span>
-                  <div className="flex items-center gap-1.5 sm:gap-2 pr-16 sm:pr-24 pl-4 sm:pl-6">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  
+                  <div className="flex items-center gap-2 mt-2 z-10">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow-md" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                     </svg>
-                    <span className="whitespace-nowrap text-[12px] sm:text-base">Watch Now</span>
+                    <span className="whitespace-nowrap text-sm sm:text-lg drop-shadow-md">Watch Now</span>
                   </div>
                 </button>
 
