@@ -143,45 +143,45 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
               )}
 
               {/* Two-button action row */}
-              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:gap-5 mt-4 w-full sm:w-auto">
+              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:gap-6 mt-4 w-full sm:w-auto">
 
                 {/* ── Watch Now (With Ads) ── */}
                 <button
                   onClick={handleWatchFree}
-                  className="group flex flex-col sm:w-[220px] rounded-2xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-b from-emerald-500 to-emerald-700 shadow-[0_4px_20px_rgba(16,185,129,0.25)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.45)] border border-emerald-400/20 active:scale-[0.98]"
+                  className="group flex flex-col sm:w-[260px] h-[70px] sm:h-[80px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-b from-[#3ddc53] via-[#28b83e] to-[#1a8a2c] shadow-[0_0_20px_rgba(34,197,94,0.4),0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.6),0_8px_25px_rgba(0,0,0,0.3)] border-2 border-emerald-400/50 active:scale-[0.97]"
                 >
-                  {/* Row 1: Badge */}
-                  <div className="flex justify-end px-1 pt-1">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-950/70 text-[8px] sm:text-[9px] font-black tracking-widest text-emerald-300 border border-emerald-400/30">
+                  {/* Row 1: Badge (right-aligned, flush top) */}
+                  <div className="flex justify-end">
+                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-emerald-900/80 text-[7px] sm:text-[10px] font-bold tracking-wider text-emerald-100 rounded-bl-lg" style={{ borderTopRightRadius: '10px' }}>
                       WITH ADS
                     </span>
                   </div>
-                  {/* Row 2: Icon + Label */}
-                  <div className="flex items-center justify-center gap-2 pb-3.5 pt-1.5 sm:pb-4 sm:pt-2 px-4">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                  {/* Row 2: Icon + Label (centered in remaining space) */}
+                  <div className="flex-1 flex items-center justify-center gap-2 sm:gap-3 -mt-1 px-4">
+                    <svg className="w-5 h-5 sm:w-7 sm:h-7 flex-shrink-0 drop-shadow-md" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                     </svg>
-                    <span className="whitespace-nowrap text-sm sm:text-base drop-shadow-sm">Watch Now</span>
+                    <span className="whitespace-nowrap text-base sm:text-xl drop-shadow-md">Watch Now</span>
                   </div>
                 </button>
 
-                {/* ── Watch Now (Without Ads · VIP) ── */}
+                {/* ── Watch Now (Without Ads) ── */}
                 <button
                   onClick={handleWatchVip}
-                  className="group flex flex-col sm:w-[220px] rounded-2xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-b from-fuchsia-500 to-[#a003a0] shadow-[0_4px_20px_rgba(217,4,201,0.25)] hover:shadow-[0_8px_30px_rgba(217,4,201,0.45)] border border-fuchsia-400/20 active:scale-[0.98]"
+                  className="group flex flex-col sm:w-[260px] h-[70px] sm:h-[80px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-b from-[#e44dff] via-[#c41adb] to-[#9b05b0] shadow-[0_0_20px_rgba(192,38,211,0.4),0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_30px_rgba(192,38,211,0.6),0_8px_25px_rgba(0,0,0,0.3)] border-2 border-fuchsia-400/50 active:scale-[0.97]"
                 >
-                  {/* Row 1: Badge */}
-                  <div className="flex justify-end px-1 pt-1">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#3a0038]/80 text-[8px] sm:text-[9px] font-black tracking-widest text-fuchsia-300 border border-fuchsia-400/30">
-                      NO ADS • VIP
+                  {/* Row 1: Badge (right-aligned, flush top) */}
+                  <div className="flex justify-end">
+                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-purple-950/80 text-[7px] sm:text-[10px] font-bold tracking-wider text-fuchsia-100 rounded-bl-lg" style={{ borderTopRightRadius: '10px' }}>
+                      WITHOUT ADS
                     </span>
                   </div>
-                  {/* Row 2: Icon + Label */}
-                  <div className="flex items-center justify-center gap-2 pb-3.5 pt-1.5 sm:pb-4 sm:pt-2 px-4">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                  {/* Row 2: Icon + Label (centered in remaining space) */}
+                  <div className="flex-1 flex items-center justify-center gap-2 sm:gap-3 -mt-1 px-4">
+                    <svg className="w-5 h-5 sm:w-7 sm:h-7 flex-shrink-0 drop-shadow-md" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                     </svg>
-                    <span className="whitespace-nowrap text-sm sm:text-base drop-shadow-sm">Watch Now</span>
+                    <span className="whitespace-nowrap text-base sm:text-xl drop-shadow-md">Watch Now</span>
                   </div>
                 </button>
 
