@@ -148,11 +148,11 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                 {/* ── Watch Now (With Ads) ── */}
                 <button
                   onClick={handleWatchFree}
-                  className="group flex flex-col sm:w-[260px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-b from-[#3ddc53] via-[#28b83e] to-[#1a8a2c] shadow-[0_0_25px_rgba(34,197,94,0.5),0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_40px_rgba(34,197,94,0.7),0_8px_25px_rgba(0,0,0,0.3)] border-2 border-emerald-400/50 active:scale-[0.97]"
+                  className="group flex flex-col sm:w-[260px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] active:scale-[0.97]"
                 >
                   {/* Row 1: Badge (right-aligned, flush top) */}
                   <div className="flex justify-end">
-                    <span className="px-1 sm:px-1.5 py-px bg-emerald-900/80 text-[5px] sm:text-[6px] font-bold tracking-wider text-emerald-100 rounded-bl-md" style={{ borderTopRightRadius: '10px' }}>
+                    <span className="px-2 sm:px-2 py-px bg-emerald-900/80 text-[6px] sm:text-[7px] font-bold tracking-wider text-emerald-100 rounded-bl-md" style={{ borderTopRightRadius: '10px' }}>
                       WITH ADS
                     </span>
                   </div>
@@ -168,11 +168,11 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                 {/* ── Watch Now (Without Ads) ── */}
                 <button
                   onClick={handleWatchVip}
-                  className="group flex flex-col sm:w-[260px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-b from-[#e44dff] via-[#c41adb] to-[#9b05b0] shadow-[0_0_25px_rgba(192,38,211,0.5),0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_40px_rgba(192,38,211,0.7),0_8px_25px_rgba(0,0,0,0.3)] border-2 border-fuchsia-400/50 active:scale-[0.97]"
+                  className="group flex flex-col sm:w-[260px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-[#d904c9] hover:bg-[#ff00d4] shadow-[0_0_20px_rgba(217,4,201,0.4)] hover:shadow-[0_0_30px_rgba(217,4,201,0.6)] active:scale-[0.97]"
                 >
                   {/* Row 1: Badge (right-aligned, flush top) */}
                   <div className="flex justify-end">
-                    <span className="px-1 sm:px-1.5 py-px bg-purple-950/80 text-[5px] sm:text-[6px] font-bold tracking-wider text-fuchsia-100 rounded-bl-md" style={{ borderTopRightRadius: '10px' }}>
+                    <span className="px-2 sm:px-2 py-px bg-purple-950/80 text-[6px] sm:text-[7px] font-bold tracking-wider text-fuchsia-100 rounded-bl-md" style={{ borderTopRightRadius: '10px' }}>
                       WITHOUT ADS
                     </span>
                   </div>
