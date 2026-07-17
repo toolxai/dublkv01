@@ -274,13 +274,21 @@ export default function AdminPage() {
   const addServer = (type: 'free' | 'vip') => {
     const key = type === 'free' ? 'free_servers' : 'vip_servers';
     const servers = editForm[key];
-    if (servers.length >= 3) return;
     setEditForm({ ...editForm, [key]: [...servers, { url: '', label: `Server ${servers.length + 1}`, enabled: true }] });
   };
 
   const removeServer = (type: 'free' | 'vip', idx: number) => {
     const key = type === 'free' ? 'free_servers' : 'vip_servers';
     setEditForm({ ...editForm, [key]: editForm[key].filter((_, i) => i !== idx) });
+  };
+
+  const moveServer = (type: 'free' | 'vip', idx: number, direction: 'up' | 'down') => {
+    const key = type === 'free' ? 'free_servers' : 'vip_servers';
+    const servers = [...editForm[key]];
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (newIdx < 0 || newIdx >= servers.length) return;
+    [servers[idx], servers[newIdx]] = [servers[newIdx], servers[idx]];
+    setEditForm({ ...editForm, [key]: servers });
   };
 
   // Save movie edits
@@ -593,16 +601,14 @@ export default function AdminPage() {
                         <div className="flex items-center justify-between mb-3">
                           <div>
                             <h3 className="text-sm font-semibold text-emerald-300">🎬 FREE Streaming Servers</h3>
-                            <p className="text-[10px] text-emerald-500/70 mt-0.5">Up to 3 servers — no login required for viewers</p>
+                            <p className="text-[10px] text-emerald-500/70 mt-0.5">Unlimited servers — no login required for viewers</p>
                           </div>
-                          {editForm.free_servers.length < 3 && (
-                            <button
-                              onClick={() => addServer('free')}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all"
-                            >
-                              + Add Server
-                            </button>
-                          )}
+                          <button
+                            onClick={() => addServer('free')}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all"
+                          >
+                            + Add Server
+                          </button>
                         </div>
                         {editForm.free_servers.length === 0 && (
                           <p className="text-xs text-dark-500 italic">No free servers yet. Click + Add Server.</p>
@@ -610,6 +616,14 @@ export default function AdminPage() {
                         <div className="space-y-3">
                           {editForm.free_servers.map((server, idx) => (
                             <div key={idx} className="flex items-start gap-2 p-3 rounded-lg bg-dark-900/60 border border-white/5">
+                              <div className="flex flex-col gap-1 flex-shrink-0 mt-1">
+                                <button onClick={() => moveServer('free', idx, 'up')} disabled={idx === 0} className="p-0.5 rounded text-dark-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all" title="Move up">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                                </button>
+                                <button onClick={() => moveServer('free', idx, 'down')} disabled={idx === editForm.free_servers.length - 1} className="p-0.5 rounded text-dark-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all" title="Move down">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                              </div>
                               <div className="flex-1 space-y-2">
                                 <div className="flex items-center gap-2">
                                   <input
@@ -635,7 +649,7 @@ export default function AdminPage() {
                                   value={server.url}
                                   onChange={(e) => updateServer('free', idx, 'url', e.target.value)}
                                   className="w-full px-2 py-1.5 rounded text-xs bg-white/5 border border-white/10 text-white placeholder-dark-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
-                                  placeholder="https://drive.google.com/file/d/FILE_ID/view"
+                                  placeholder="https://playmogo.com/e/... or any embed URL"
                                 />
                               </div>
                               <button
@@ -654,16 +668,14 @@ export default function AdminPage() {
                         <div className="flex items-center justify-between mb-3">
                           <div>
                             <h3 className="text-sm font-semibold text-brand-300">⚡ VIP Streaming Servers</h3>
-                            <p className="text-[10px] text-brand-500/70 mt-0.5">Up to 3 servers — requires VIP subscription</p>
+                            <p className="text-[10px] text-brand-500/70 mt-0.5">Unlimited servers — requires VIP subscription</p>
                           </div>
-                          {editForm.vip_servers.length < 3 && (
-                            <button
-                              onClick={() => addServer('vip')}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 hover:bg-brand-500/30 transition-all"
-                            >
-                              + Add Server
-                            </button>
-                          )}
+                          <button
+                            onClick={() => addServer('vip')}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 hover:bg-brand-500/30 transition-all"
+                          >
+                            + Add Server
+                          </button>
                         </div>
                         {editForm.vip_servers.length === 0 && (
                           <p className="text-xs text-dark-500 italic">No VIP servers yet. VIP falls back to free servers if empty.</p>
@@ -671,6 +683,14 @@ export default function AdminPage() {
                         <div className="space-y-3">
                           {editForm.vip_servers.map((server, idx) => (
                             <div key={idx} className="flex items-start gap-2 p-3 rounded-lg bg-dark-900/60 border border-white/5">
+                              <div className="flex flex-col gap-1 flex-shrink-0 mt-1">
+                                <button onClick={() => moveServer('vip', idx, 'up')} disabled={idx === 0} className="p-0.5 rounded text-dark-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all" title="Move up">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                                </button>
+                                <button onClick={() => moveServer('vip', idx, 'down')} disabled={idx === editForm.vip_servers.length - 1} className="p-0.5 rounded text-dark-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all" title="Move down">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                              </div>
                               <div className="flex-1 space-y-2">
                                 <div className="flex items-center gap-2">
                                   <input
