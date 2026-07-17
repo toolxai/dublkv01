@@ -152,7 +152,7 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                 >
                   {/* Row 1: Badge (right-aligned, flush top) */}
                   <div className="flex justify-end">
-                    <span className="px-1.5 sm:px-2 py-px sm:py-0.5 bg-emerald-900/80 text-[6px] sm:text-[8px] font-bold tracking-wider text-emerald-100 rounded-bl-lg" style={{ borderTopRightRadius: '10px' }}>
+                    <span className="px-1 sm:px-1.5 py-px bg-emerald-900/80 text-[5px] sm:text-[6px] font-bold tracking-wider text-emerald-100 rounded-bl-md" style={{ borderTopRightRadius: '10px' }}>
                       WITH ADS
                     </span>
                   </div>
@@ -172,7 +172,7 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                 >
                   {/* Row 1: Badge (right-aligned, flush top) */}
                   <div className="flex justify-end">
-                    <span className="px-1.5 sm:px-2 py-px sm:py-0.5 bg-purple-950/80 text-[6px] sm:text-[8px] font-bold tracking-wider text-fuchsia-100 rounded-bl-lg" style={{ borderTopRightRadius: '10px' }}>
+                    <span className="px-1 sm:px-1.5 py-px bg-purple-950/80 text-[5px] sm:text-[6px] font-bold tracking-wider text-fuchsia-100 rounded-bl-md" style={{ borderTopRightRadius: '10px' }}>
                       WITHOUT ADS
                     </span>
                   </div>
