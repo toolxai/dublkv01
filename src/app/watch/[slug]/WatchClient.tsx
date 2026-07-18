@@ -33,17 +33,29 @@ interface WatchClientProps {
 }
 
 /**
- * Extract a Google Drive embed URL from various share link formats.
+ * Convert a URL to an embeddable format.
+ * - Google Drive share links → /preview embed
+ * - Other URLs (playmogo, vidara, vidsonic, etc.) → pass through as-is
  */
-function getGDriveEmbedUrl(url: string): string {
+function getEmbedUrl(url: string): string {
   if (!url) return '';
-  if (url.includes('/preview')) return url;
-  const fileMatch = url.match(/\/file\/d\/([^/]+)/);
+  // Already a Google Drive preview URL
+  if (url.includes('drive.google.com') && url.includes('/preview')) return url;
+  // Google Drive share link: /file/d/FILE_ID/view
+  const fileMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
   if (fileMatch) return `https://drive.google.com/file/d/${fileMatch[1]}/preview`;
-  const idMatch = url.match(/[?&]id=([^&]+)/);
+  // Google Drive ?id= format
+  const idMatch = url.match(/drive\.google\.com.*[?&]id=([^&]+)/);
   if (idMatch) return `https://drive.google.com/file/d/${idMatch[1]}/preview`;
-  if (/^[a-zA-Z0-9_-]{20,}$/.test(url.trim())) return `https://drive.google.com/file/d/${url.trim()}/preview`;
+  // All other embed URLs (playmogo, vidara, vidsonic, etc.) — pass through
   return url;
+}
+
+/**
+ * Check if a URL is a Google Drive embed (to show the "open in new tab" blocker overlay).
+ */
+function isGoogleDriveUrl(url: string): boolean {
+  return url.includes('drive.google.com');
 }
 
 export default function WatchClient({ movie }: WatchClientProps) {
@@ -57,6 +69,7 @@ export default function WatchClient({ movie }: WatchClientProps) {
   const [activeServerIdx, setActiveServerIdx] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
   const [mobilePlayerStarted, setMobilePlayerStarted] = useState(false);
   const playerContainerRef = useRef<HTMLDivElement>(null);
 
@@ -96,7 +109,16 @@ export default function WatchClient({ movie }: WatchClientProps) {
   }, [isFreeMode, user, authLoading, movie.slug, router]);
 
   const currentServer = availableServers[activeServerIdx];
-  const embedUrl = currentServer ? getGDriveEmbedUrl(currentServer.url) : null;
+  const embedUrl = currentServer ? getEmbedUrl(currentServer.url) : null;
+  const showGDriveOverlay = embedUrl ? isGoogleDriveUrl(embedUrl) : false;
+
+  const handleServerSwitch = (idx: number) => {
+    if (idx === activeServerIdx) return;
+    setActiveServerIdx(idx);
+    setIframeLoaded(false);
+    setIframeError(false);
+    setMobilePlayerStarted(false);
+  };
 
   const toggleFullscreen = () => {
     if (!playerContainerRef.current) return;
@@ -115,8 +137,10 @@ export default function WatchClient({ movie }: WatchClientProps) {
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
+  // Reset iframe state on server change
   useEffect(() => {
     setIframeLoaded(false);
+    setIframeError(false);
     setMobilePlayerStarted(false);
   }, [activeServerIdx]);
 
@@ -169,10 +193,14 @@ export default function WatchClient({ movie }: WatchClientProps) {
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Free mode badge */}
-            {isFreeMode && (
+            {/* Mode badge */}
+            {isFreeMode ? (
               <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium">
                 🎬 Free with Ads
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-xs text-brand-400 font-medium">
+                ⚡ VIP
               </div>
             )}
             <button
@@ -200,29 +228,6 @@ export default function WatchClient({ movie }: WatchClientProps) {
 
       {/* Video Player Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Server Tabs */}
-        {availableServers.length > 0 && (
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs text-dark-500 mr-2">Select Server:</span>
-            {availableServers.map((server, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveServerIdx(idx)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeServerIdx === idx
-                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/25'
-                    : 'bg-white/5 text-dark-400 border border-white/10 hover:border-brand-500/30 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <span>🎬</span>
-                <span>{server.label}</span>
-                {activeServerIdx === idx && (
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse ml-1" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Video Player */}
         <div
@@ -240,9 +245,37 @@ export default function WatchClient({ movie }: WatchClientProps) {
             {embedUrl ? (
               <>
                 {/* Loading overlay */}
-                {!iframeLoaded && (
+                {!iframeLoaded && !iframeError && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-dark-950">
                     <LoadingSpinner size="lg" text="Loading player..." />
+                  </div>
+                )}
+
+                {/* Error overlay */}
+                {iframeError && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-dark-950">
+                    <div className="text-center px-6">
+                      <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">Server Unavailable</h3>
+                      <p className="text-dark-400 text-sm mb-4">This server is not responding. Please try another server below.</p>
+                      {availableServers.length > 1 && (
+                        <div className="flex flex-wrap justify-center gap-2">
+                          {availableServers.map((server, idx) => idx !== activeServerIdx && (
+                            <button
+                              key={idx}
+                              onClick={() => handleServerSwitch(idx)}
+                              className="px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 text-white hover:bg-brand-500 transition-all"
+                            >
+                              Try {server.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -271,30 +304,33 @@ export default function WatchClient({ movie }: WatchClientProps) {
                   allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                   allowFullScreen
                   title={`Watch ${movie.title}`}
-                  onLoad={() => setIframeLoaded(true)}
+                  onLoad={() => { setIframeLoaded(true); setIframeError(false); }}
+                  onError={() => setIframeError(true)}
                 />
 
-                {/* Block Google Drive "open in new tab" icon */}
-                <div
-                  aria-hidden="true"
-                  style={{
-                    position: 'absolute', top: 0, right: 0,
-                    width: '52px', height: '52px',
-                    zIndex: 20, pointerEvents: 'all',
-                    cursor: 'default',
-                    background: 'rgba(0,0,0,0.88)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/logo.png" alt="DubLK" draggable={false}
-                    style={{ width: '40px', height: 'auto', opacity: 0.9, userSelect: 'none', pointerEvents: 'none' }}
-                  />
-                </div>
+                {/* Block Google Drive "open in new tab" icon — only for GDrive embeds */}
+                {showGDriveOverlay && (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute', top: 0, right: 0,
+                      width: '52px', height: '52px',
+                      zIndex: 20, pointerEvents: 'all',
+                      cursor: 'default',
+                      background: 'rgba(0,0,0,0.88)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo.png" alt="DubLK" draggable={false}
+                      style={{ width: '40px', height: 'auto', opacity: 0.9, userSelect: 'none', pointerEvents: 'none' }}
+                    />
+                  </div>
+                )}
               </>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center bg-dark-900">
@@ -310,6 +346,57 @@ export default function WatchClient({ movie }: WatchClientProps) {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Server Selection Bar — always visible below the player */}
+        <div className="mt-4 rounded-xl bg-dark-900/60 border border-white/5 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
+              </svg>
+              <span className="text-sm font-medium text-white">
+                {isFreeMode ? 'FREE Servers' : 'VIP Servers'}
+              </span>
+              <span className="text-xs text-dark-500">
+                ({availableServers.length} available)
+              </span>
+            </div>
+            {currentServer && (
+              <span className="text-xs text-dark-500">
+                Playing: <span className="text-white font-medium">{currentServer.label}</span>
+              </span>
+            )}
+          </div>
+
+          {availableServers.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {availableServers.map((server, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleServerSwitch(idx)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    activeServerIdx === idx
+                      ? isFreeMode
+                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 ring-1 ring-emerald-400/30'
+                        : 'bg-brand-600 text-white shadow-lg shadow-brand-500/25 ring-1 ring-brand-400/30'
+                      : 'bg-white/5 text-dark-400 border border-white/10 hover:border-white/20 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {activeServerIdx === idx ? (
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    </svg>
+                  )}
+                  <span>{server.label}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-dark-500 italic">No servers available for this movie.</p>
+          )}
         </div>
 
         {/* Player Info Bar */}
@@ -335,19 +422,6 @@ export default function WatchClient({ movie }: WatchClientProps) {
                 ⚡ Upgrade to VIP
               </button>
             )}
-            <button
-              onClick={() => {
-                if (availableServers.length > 1) {
-                  setActiveServerIdx((activeServerIdx + 1) % availableServers.length);
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-dark-400 hover:text-white bg-white/5 border border-white/5 hover:border-white/10 transition-all"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {availableServers.length > 1 ? 'Switch Server' : 'Refresh'}
-            </button>
           </div>
         </div>
       </div>
