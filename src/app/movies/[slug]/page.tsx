@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getMovieCredits, type TMDBCredits } from '@/lib/tmdb';
 import MovieDetailClient from './MovieDetailClient';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface Props {
   params: { slug: string };

@@ -7,6 +7,9 @@ import { cookies } from 'next/headers';
 import WatchClient from './WatchClient';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Props {
   params: { slug: string };
   searchParams: { mode?: string };
