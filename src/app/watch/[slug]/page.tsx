@@ -85,7 +85,7 @@ export default async function WatchPage({ params, searchParams }: Props) {
         <LoadingSpinner size="lg" text="Loading player..." />
       </div>
     }>
-      <WatchClient movie={safeMovie} />
+      <WatchClient movie={safeMovie} isFreeMode={isFreeMode} />
     </Suspense>
   );
 }

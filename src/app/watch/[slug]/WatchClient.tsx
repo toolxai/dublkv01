@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -30,6 +30,7 @@ interface WatchClientProps {
     runtime: number | null;
     genres: string[];
   };
+  isFreeMode: boolean;
 }
 
 /**
@@ -58,13 +59,9 @@ function isGoogleDriveUrl(url: string): boolean {
   return url.includes('drive.google.com');
 }
 
-export default function WatchClient({ movie }: WatchClientProps) {
+export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // mode=free means no login required, uses free_servers
-  const isFreeMode = searchParams.get('mode') === 'free';
 
   const [activeServerIdx, setActiveServerIdx] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
