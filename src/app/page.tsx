@@ -2,8 +2,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import HomeClient from '@/app/HomeClient';
 import MovieRow from '@/components/ui/MovieRow';
 
-// Revalidate every 60 seconds for ISR
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function getMovies() {
   const supabase = createAdminClient();
