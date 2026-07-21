@@ -50,7 +50,7 @@ export default async function HomePage() {
       <HomeClient heroMovies={heroMovies} />
 
       {/* Movie Rows — only 2 sections */}
-      <div className="relative -mt-20 z-10 space-y-10 pb-16">
+      <div className="relative mt-4 sm:-mt-6 lg:-mt-12 z-10 space-y-8 sm:space-y-10 pb-16">
         <MovieRow title="Recently Added" movies={recentMovies} icon="🆕" />
         <MovieRow title="Top Rated" movies={topRated} icon="⭐" />
       </div>

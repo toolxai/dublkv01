@@ -46,7 +46,7 @@ export default function HeroBanner({ movies }: HeroBannerProps) {
   const movie = movies[currentIndex];
 
   return (
-    <section className="relative h-[60vh] sm:h-[70vh] lg:h-[75vh] w-full overflow-hidden">
+    <section className="relative min-h-[480px] sm:min-h-[540px] lg:h-[75vh] w-full overflow-hidden">
       {/* Background Image */}
       <div className={`absolute inset-0 transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
         {movie.backdrop_url ? (
@@ -69,22 +69,22 @@ export default function HeroBanner({ movies }: HeroBannerProps) {
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-dark-950 to-transparent" />
 
       {/* Content — centred vertically so it sits high, not at the very bottom */}
-      <div className="relative h-full flex items-center pt-16">
+      <div className="relative h-full flex items-center pt-20 sm:pt-16 pb-6 sm:pb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className={`max-w-2xl transition-all duration-500 ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
             {/* Sinhala Dubbed Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/20 border border-brand-500/30 mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/20 border border-brand-500/30 mb-3 sm:mb-4">
               <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-              <span className="text-xs font-semibold text-brand-300 tracking-wide">සිංහල හඩකැවූ - SINHALA DUBBED</span>
+              <span className="text-[11px] sm:text-xs font-semibold text-brand-300 tracking-wide">සිංහල හඩකැවූ - SINHALA DUBBED</span>
             </div>
 
             {/* Title */}
-            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-display font-bold text-white leading-tight mb-4">
+            <h1 className="text-2xl sm:text-4xl lg:text-6xl font-display font-bold text-white leading-tight mb-3 sm:mb-4">
               {movie.title}
             </h1>
 
             {/* Meta Info */}
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-2.5 sm:gap-3 mb-3 sm:mb-4 flex-wrap">
               {movie.rating > 0 && (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-500/15 border border-yellow-500/20">
                   <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -94,10 +94,10 @@ export default function HeroBanner({ movies }: HeroBannerProps) {
                 </div>
               )}
               {movie.release_year && (
-                <span className="text-sm text-dark-300 font-medium">{movie.release_year}</span>
+                <span className="text-xs sm:text-sm text-dark-300 font-medium">{movie.release_year}</span>
               )}
               {movie.genres.slice(0, 3).map((genre) => (
-                <span key={genre} className="px-2.5 py-1 text-xs rounded-full bg-white/5 border border-white/10 text-dark-300">
+                <span key={genre} className="px-2.5 py-1 text-[11px] sm:text-xs rounded-full bg-white/5 border border-white/10 text-dark-300">
                   {genre}
                 </span>
               ))}
@@ -105,8 +105,8 @@ export default function HeroBanner({ movies }: HeroBannerProps) {
 
             {/* Description */}
             {movie.description && (
-              <p className="text-sm sm:text-base text-dark-300 leading-relaxed mb-6 max-w-xl">
-                {truncate(movie.description, 200)}
+              <p className="text-xs sm:text-base text-dark-300 leading-relaxed mb-5 max-w-xl line-clamp-3 sm:line-clamp-none">
+                {truncate(movie.description, 160)}
               </p>
             )}
 
