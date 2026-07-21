@@ -98,9 +98,9 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
       // Create purchase record
       const { error: insertError } = await supabase.from('purchases').insert({
         user_id: user.id,
-        movie_id: selectedPlan === 'single' ? movieId : null,
-        type: selectedPlan,
-        amount: selectedPlan === 'single' ? 20 : 100,
+        movie_id: null,
+        type: 'full',
+        amount: 100,
         payment_method: selectedMethod,
         payment_proof_url: fileName,
         status: 'pending',
@@ -281,7 +281,7 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
                   <div className="animate-fade-in">
                     <h2 className="text-xl font-display font-bold text-white mb-1">Payment Method</h2>
                     <p className="text-sm text-dark-400 mb-1">
-                      {selectedPlan === 'single' ? 'Single Movie' : 'All Movies'} — <span className="text-brand-400 font-semibold">{formatCurrency(selectedPlan === 'single' ? 20 : 100)}</span>
+                      VIP Lifetime Access — <span className="text-brand-400 font-semibold">{formatCurrency(100)}</span>
                     </p>
                     <p className="text-xs text-dark-500 mb-6">Select your preferred payment method</p>
 
@@ -305,7 +305,7 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
                   <div className="animate-fade-in">
                     <h2 className="text-xl font-display font-bold text-white mb-1">Upload Payment Proof</h2>
                     <p className="text-xs text-dark-500 mb-4">
-                      {selectedPlan === 'single' ? 'Single Movie' : 'All Movies'} — {formatCurrency(selectedPlan === 'single' ? 20 : 100)} via {selectedMethodInfo?.name}
+                      VIP Lifetime Access — {formatCurrency(100)} via {selectedMethodInfo?.name}
                     </p>
 
                     {/* Payment Instructions */}
@@ -317,7 +317,7 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
                             <p className="text-sm font-medium text-blue-300 mb-1">{selectedMethodInfo.name} Instructions</p>
                             <p className="text-xs text-blue-300/70">{selectedMethodInfo.instructions}</p>
                             <p className="text-xs text-blue-300/70 mt-1">
-                              Amount: <span className="font-bold text-blue-200">{formatCurrency(selectedPlan === 'single' ? 20 : 100)}</span>
+                              Amount: <span className="font-bold text-blue-200">{formatCurrency(100)}</span>
                             </p>
                           </div>
                         </div>

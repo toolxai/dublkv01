@@ -5,11 +5,15 @@ import { createClient } from '@/lib/supabase/client';
 import { showToastGlobal } from '@/components/ui/Toast';
 import type { User, Session } from '@supabase/supabase-js';
 
+export type UserRole = 'user' | 'editor' | 'moderator' | 'admin';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  role: UserRole;
+  canMaintain: boolean;
   showAuthModal: boolean;
   authModalCallback: (() => void) | null;
   openAuthModal: (callback?: () => void) => void;
@@ -22,6 +26,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   isLoading: true,
   isAdmin: false,
+  role: 'user',
+  canMaintain: false,
   showAuthModal: false,
   authModalCallback: null,
   openAuthModal: () => {},
@@ -34,6 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<UserRole>('user');
+  const [canMaintain, setCanMaintain] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalCallback, setAuthModalCallback] = useState<(() => void) | null>(null);
   const previousUserRef = useRef<User | null>(null);
@@ -41,16 +49,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const supabase = createClient();
 
-  const checkAdmin = useCallback(async (userId: string) => {
+  const checkRole = useCallback(async (userId: string) => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('*')
         .eq('id', userId)
-        .single();
-      setIsAdmin(data?.is_admin || false);
-    } catch {
+        .maybeSingle();
+
+      if (error || !data) {
+        setIsAdmin(false);
+        setRole('user');
+        setCanMaintain(false);
+        return;
+      }
+
+      const isAdm = Boolean(data.is_admin === true || data.role === 'admin');
+      const userRole: UserRole = (data.role as UserRole) || (isAdm ? 'admin' : 'user');
+
+      setIsAdmin(isAdm);
+      setRole(userRole);
+      setCanMaintain(isAdm || userRole === 'editor' || userRole === 'moderator');
+    } catch (err) {
+      console.error('[checkRole] error:', err);
       setIsAdmin(false);
+      setRole('user');
+      setCanMaintain(false);
     }
   }, [supabase]);
 
@@ -61,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       previousUserRef.current = session?.user ?? null;
       if (session?.user) {
-        await checkAdmin(session.user.id);
+        await checkRole(session.user.id);
       }
       setIsLoading(false);
       initialLoadRef.current = false;
@@ -78,9 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(newUser);
 
         if (newUser) {
-          await checkAdmin(newUser.id);
+          await checkRole(newUser.id);
         } else {
           setIsAdmin(false);
+          setRole('user');
+          setCanMaintain(false);
         }
 
         setIsLoading(false);
@@ -103,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, [supabase, checkAdmin]);
+  }, [supabase, checkRole]);
 
   // When user logs in and there's a pending callback, execute it
   useEffect(() => {
@@ -131,6 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    setRole('user');
+    setCanMaintain(false);
   }, [supabase]);
 
   return (
@@ -140,6 +168,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         isLoading,
         isAdmin,
+        role,
+        canMaintain,
         showAuthModal,
         authModalCallback,
         openAuthModal,

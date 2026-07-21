@@ -25,10 +25,10 @@ function getSupabaseClient() {
 async function isAdmin(supabase: any, userId: string): Promise<boolean> {
   const { data } = await supabase
     .from('profiles')
-    .select('is_admin')
+    .select('*')
     .eq('id', userId)
-    .single();
-  return data?.is_admin === true;
+    .maybeSingle();
+  return Boolean(data?.is_admin === true || data?.role === 'admin');
 }
 
 // GET - List pending payments

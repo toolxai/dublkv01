@@ -37,13 +37,27 @@ export async function GET(request: Request) {
         },
       }
     )
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
+    const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error && user) {
+      // Ensure user profile exists in public.profiles table
+      const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '';
+      const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+      try {
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          email: user.email,
+          full_name: name,
+          avatar_url: avatarUrl,
+        }, { onConflict: 'id' });
+      } catch (err) {
+        console.warn('Profile sync warning in callback:', err);
+      }
+
       return NextResponse.redirect(`${origin}${next}`)
     } else {
-      console.error('[auth/callback] error:', error.message)
+      console.error('[auth/callback] error:', error?.message)
       // Redirect to homepage with error
-      return NextResponse.redirect(`${origin}/?error=${encodeURIComponent(error.message)}`)
+      return NextResponse.redirect(`${origin}/?error=${encodeURIComponent(error?.message || 'Authentication failed')}`)
     }
   }
 

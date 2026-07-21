@@ -54,7 +54,7 @@ export async function GET(
   try {
     const { data: movie, error: movieError } = await adminDb
       .from('movies')
-      .select('id, title, server1_url, server2_url, free_servers, vip_servers, bunny_video_id')
+      .select('id, title, server1_url, server2_url, free_servers, vip_servers')
       .eq('id', movieId)
       .eq('is_published', true)
       .single();
@@ -63,12 +63,18 @@ export async function GET(
       return NextResponse.json({ error: 'Movie not found' }, { status: 404 });
     }
 
-    // Build enabled free server list
-    const freeServers: StreamServer[] = (movie.free_servers || []).filter((s: StreamServer) => s.enabled);
-    // Legacy fallback
+    // Build enabled free server list and format with generic labels (Server 1, Server 2, ...)
+    const rawFree: any[] = (movie.free_servers || []).filter((s: any) => s.enabled !== false);
+    let freeServers = rawFree.map((s, idx) => ({
+      ...s,
+      label: `Server ${idx + 1}`,
+      name: undefined, // Hide admin provider name from public API
+    }));
+
+    // Legacy fallback if free_servers array is empty
     if (freeServers.length === 0) {
-      if (movie.server1_url) freeServers.push({ url: movie.server1_url, label: 'Server 1', enabled: true });
-      if (movie.server2_url) freeServers.push({ url: movie.server2_url, label: 'Server 2', enabled: true });
+      if (movie.server1_url) freeServers.push({ url: movie.server1_url, label: 'Server 1', enabled: true, input_type: 'url' });
+      if (movie.server2_url) freeServers.push({ url: movie.server2_url, label: 'Server 2', enabled: true, input_type: 'url' });
     }
 
     if (mode === 'free') {
@@ -92,8 +98,13 @@ export async function GET(
       );
     }
 
-    // Build enabled VIP server list
-    const vipServers: StreamServer[] = (movie.vip_servers || []).filter((s: StreamServer) => s.enabled);
+    // Build enabled VIP server list with generic labels
+    const rawVip: any[] = (movie.vip_servers || []).filter((s: any) => s.enabled !== false);
+    const vipServers = rawVip.map((s, idx) => ({
+      ...s,
+      label: `Server ${idx + 1}`,
+      name: undefined, // Hide admin provider name from public API
+    }));
 
     return NextResponse.json({
       access: true,

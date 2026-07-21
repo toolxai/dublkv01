@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase/client';
 import MovieRow from '@/components/ui/MovieRow';
 import PricingModal from '@/components/payment/PricingModal';
 import type { TMDBCredits } from '@/lib/tmdb';
@@ -25,7 +26,6 @@ interface Movie {
   release_year: number | null;
   runtime: number | null;
   genres: string[];
-  bunny_video_id: string | null;
   free_servers?: Server[] | null;
   vip_servers?: Server[] | null;
   // legacy
@@ -42,9 +42,52 @@ interface MovieDetailClientProps {
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
 
 export default function MovieDetailClient({ movie, relatedMovies, credits }: MovieDetailClientProps) {
-  const { user } = useAuth();
+  const { user, openAuthModal } = useAuth();
   const router = useRouter();
   const [showPricing, setShowPricing] = useState(false);
+  const [hasVipAccess, setHasVipAccess] = useState(false);
+
+  // Check if current logged in user has approved VIP access (or is admin)
+  useEffect(() => {
+    async function checkAccess() {
+      if (!user) {
+        setHasVipAccess(false);
+        return;
+      }
+      try {
+        const supabase = createClient();
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.is_admin) {
+          setHasVipAccess(true);
+          return;
+        }
+
+        const { data: purchases } = await supabase
+          .from('purchases')
+          .select('type, movie_id, status')
+          .eq('user_id', user.id)
+          .eq('status', 'verified');
+
+        if (purchases && purchases.length > 0) {
+          const hasFull = purchases.some((p: any) => p.type === 'full');
+          const hasSingle = purchases.some((p: any) => p.type === 'single' && p.movie_id === movie.id);
+          if (hasFull || hasSingle) {
+            setHasVipAccess(true);
+            return;
+          }
+        }
+        setHasVipAccess(false);
+      } catch {
+        setHasVipAccess(false);
+      }
+    }
+    checkAccess();
+  }, [user, movie.id]);
 
   // Determine if there are free servers available (legacy or new)
   const freeServersAvailable = (
@@ -58,8 +101,18 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
   };
 
   const handleWatchVip = () => {
-    // Opens pricing modal; VIP requires login
-    setShowPricing(true);
+    if (!user) {
+      openAuthModal(() => {});
+      return;
+    }
+
+    if (hasVipAccess) {
+      // Direct access if approved by admin
+      router.push(`/watch/${movie.slug}?mode=vip`);
+    } else {
+      // Payment required if not approved yet
+      setShowPricing(true);
+    }
   };
 
   const formatRuntime = (mins: number) => {
@@ -143,46 +196,34 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
               )}
 
               {/* Two-button action row */}
-              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:gap-6 mt-4 w-full sm:w-auto">
+              <div className="flex flex-row items-center gap-3 sm:gap-5 mt-6 w-full sm:w-auto">
 
-                {/* ── Watch Now (With Ads) ── */}
+                {/* ── Play (With Ads) ── */}
                 <button
                   onClick={handleWatchFree}
-                  className="group flex flex-col sm:w-[220px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] active:scale-[0.97]"
+                  className="relative flex-1 sm:flex-initial inline-flex items-center justify-center gap-2.5 min-w-[130px] sm:min-w-[175px] px-5 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-[0_4px_20px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_25px_rgba(16,185,129,0.5)] hover:-translate-y-0.5 active:scale-[0.97] group"
                 >
-                  {/* Row 1: Badge (right-aligned, flush top) */}
-                  <div className="flex justify-end">
-                    <span className="px-2 sm:px-2 py-px bg-emerald-900/80 text-[6px] sm:text-[7px] font-bold tracking-wider text-emerald-100 rounded-bl-md" style={{ borderTopRightRadius: '10px' }}>
-                      WITH ADS
-                    </span>
-                  </div>
-                  {/* Row 2: Icon + Label (centered in remaining space) */}
-                  <div className="flex-1 flex items-center justify-center gap-2 sm:gap-3 -mt-2 px-4">
-                    <svg className="w-5 h-5 sm:w-7 sm:h-7 flex-shrink-0 drop-shadow-md" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                    </svg>
-                    <span className="whitespace-nowrap text-base sm:text-xl drop-shadow-md">Watch Now</span>
-                  </div>
+                  <span className="absolute -top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-extrabold tracking-wider uppercase bg-emerald-950/95 border border-emerald-400/40 text-emerald-300 shadow-sm backdrop-blur-md">
+                    WITH ADS
+                  </span>
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow transition-transform duration-300 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                  <span className="whitespace-nowrap text-base sm:text-lg tracking-wide">Play</span>
                 </button>
 
-                {/* ── Watch Now (Without Ads) ── */}
+                {/* ── Play (Without Ads) ── */}
                 <button
                   onClick={handleWatchVip}
-                  className="group flex flex-col sm:w-[220px] h-[56px] sm:h-[64px] rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-[#d904c9] hover:bg-[#ff00d4] shadow-[0_0_20px_rgba(217,4,201,0.4)] hover:shadow-[0_0_30px_rgba(217,4,201,0.6)] active:scale-[0.97]"
+                  className="relative flex-1 sm:flex-initial inline-flex items-center justify-center gap-2.5 min-w-[130px] sm:min-w-[175px] px-5 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 shadow-[0_4px_20px_rgba(217,4,201,0.35)] hover:shadow-[0_6px_25px_rgba(217,4,201,0.5)] hover:-translate-y-0.5 active:scale-[0.97] group"
                 >
-                  {/* Row 1: Badge (right-aligned, flush top) */}
-                  <div className="flex justify-end">
-                    <span className="px-2 sm:px-2 py-px bg-purple-950/80 text-[6px] sm:text-[7px] font-bold tracking-wider text-fuchsia-100 rounded-bl-md" style={{ borderTopRightRadius: '10px' }}>
-                      WITHOUT ADS
-                    </span>
-                  </div>
-                  {/* Row 2: Icon + Label (centered in remaining space) */}
-                  <div className="flex-1 flex items-center justify-center gap-2 sm:gap-3 -mt-2 px-4">
-                    <svg className="w-5 h-5 sm:w-7 sm:h-7 flex-shrink-0 drop-shadow-md" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                    </svg>
-                    <span className="whitespace-nowrap text-base sm:text-xl drop-shadow-md">Watch Now</span>
-                  </div>
+                  <span className="absolute -top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-extrabold tracking-wider uppercase bg-purple-950/95 border border-fuchsia-400/40 text-fuchsia-200 shadow-sm backdrop-blur-md">
+                    {hasVipAccess ? 'VIP UNLOCKED' : 'WITHOUT ADS'}
+                  </span>
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow transition-transform duration-300 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                  <span className="whitespace-nowrap text-base sm:text-lg tracking-wide">Play</span>
                 </button>
 
               </div>

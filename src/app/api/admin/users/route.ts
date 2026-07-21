@@ -50,10 +50,10 @@ function getServiceClient() {
 async function isAdmin(supabase: any, userId: string): Promise<boolean> {
   const { data } = await supabase
     .from('profiles')
-    .select('is_admin')
+    .select('*')
     .eq('id', userId)
-    .single();
-  return data?.is_admin === true;
+    .maybeSingle();
+  return Boolean(data?.is_admin === true || data?.role === 'admin');
 }
 
 // ─── GET — List all users with their purchases ────────────────────────────────
@@ -113,15 +113,32 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'User ID required' }, { status: 400 });
   }
 
+  if (updates.role) {
+    updates.is_admin = updates.role === 'admin';
+  }
+
   // Use service client to bypass RLS on profiles
   const db = getServiceClient();
 
-  const { data: profile, error } = await db
+  let { data: profile, error } = await db
     .from('profiles')
     .update(updates)
     .eq('id', id)
     .select()
     .single();
+
+  // If role column is missing in database schema, strip role and retry with is_admin
+  if (error && (error.message?.includes('role') || error.code === 'PGRST204')) {
+    delete updates.role;
+    const retry = await db
+      .from('profiles')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    profile = retry.data;
+    error = retry.error;
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -156,12 +173,27 @@ export async function POST(request: NextRequest) {
   // ✅ Use service client — bypasses RLS so we can insert for any userId
   const db = getServiceClient();
 
+  // Check if user already has an active verified VIP Full Access
+  if (type === 'full') {
+    const { data: existing } = await db
+      .from('purchases')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('type', 'full')
+      .eq('status', 'verified')
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json({ error: 'User already has active VIP Full Access' }, { status: 400 });
+    }
+  }
+
   const { data: purchase, error } = await db
     .from('purchases')
     .insert({
       user_id: userId,
       movie_id: type === 'single' ? movieId : null,
-      type,
+      type: 'full',
       amount: 0,          // admin-granted, no charge
       status: 'verified',
       payment_method: 'admin_grant',
@@ -179,7 +211,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ purchase });
 }
 
-// ─── DELETE — Revoke access (delete a purchase) ───────────────────────────────
+// ─── DELETE — Delete a user account OR revoke access (delete a purchase) ────
 export async function DELETE(request: NextRequest) {
   const authClient = getAuthClient();
   const { data: { user } } = await authClient.auth.getUser();
@@ -188,23 +220,47 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  const { purchaseId } = await request.json();
+  const { targetUserId, purchaseId } = await request.json();
 
-  if (!purchaseId) {
-    return NextResponse.json({ error: 'purchaseId required' }, { status: 400 });
-  }
-
-  // ✅ Use service client — bypasses RLS so we can delete any purchase
   const db = getServiceClient();
 
-  const { error } = await db
-    .from('purchases')
-    .delete()
-    .eq('id', purchaseId);
+  // If targetUserId is provided, delete the entire user account
+  if (targetUserId) {
+    if (targetUserId === user.id) {
+      return NextResponse.json({ error: 'You cannot delete your own admin account.' }, { status: 400 });
+    }
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Delete user purchases first
+    await db.from('purchases').delete().eq('user_id', targetUserId);
+
+    // Delete user profile
+    await db.from('profiles').delete().eq('id', targetUserId);
+
+    // Delete auth user from Supabase Auth
+    try {
+      if (db.auth && db.auth.admin) {
+        await db.auth.admin.deleteUser(targetUserId);
+      }
+    } catch (authErr) {
+      console.warn('Could not delete auth user (requires service role key):', authErr);
+    }
+
+    return NextResponse.json({ success: true, message: 'User deleted successfully' });
   }
 
-  return NextResponse.json({ success: true });
+  // If purchaseId is provided, revoke that purchase
+  if (purchaseId) {
+    const { error } = await db
+      .from('purchases')
+      .delete()
+      .eq('id', purchaseId);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  }
+
+  return NextResponse.json({ error: 'targetUserId or purchaseId required' }, { status: 400 });
 }

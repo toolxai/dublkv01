@@ -53,9 +53,11 @@ CREATE TABLE IF NOT EXISTS public.movies (
   rating NUMERIC(3,1) DEFAULT 0,
   release_year INTEGER,
   runtime INTEGER,
-  bunny_video_id TEXT,
+  free_servers JSONB DEFAULT '[]'::jsonb,
+  vip_servers JSONB DEFAULT '[]'::jsonb,
   is_published BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT now()
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Index for faster slug lookups

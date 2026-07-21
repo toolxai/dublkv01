@@ -10,14 +10,21 @@ async function getMovies() {
   const { data: movies, error } = await supabase
     .from('movies')
     .select('*')
-    .eq('is_published', true)
-    .order('created_at', { ascending: false });
+    .eq('is_published', true);
 
   if (error) {
     console.error('Failed to fetch movies:', error);
     return [];
   }
-  return movies || [];
+
+  // Sort by latest update timestamp (falling back to creation date)
+  const sorted = [...(movies || [])].sort((a, b) => {
+    const timeA = new Date(a.updated_at || a.created_at).getTime();
+    const timeB = new Date(b.updated_at || b.created_at).getTime();
+    return timeB - timeA;
+  });
+
+  return sorted;
 }
 
 export default async function HomePage() {

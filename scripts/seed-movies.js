@@ -218,7 +218,7 @@ async function main() {
       const posterUrl = best.poster_path ? `https://image.tmdb.org/t/p/w500${best.poster_path}` : null;
       const backdropUrl = best.backdrop_path ? `https://image.tmdb.org/t/p/original${best.backdrop_path}` : null;
 
-      const sql = `INSERT INTO public.movies (tmdb_id, title, slug, description, poster_url, backdrop_url, genres, rating, release_year, runtime, bunny_video_id, is_published)
+      const sql = `INSERT INTO public.movies (tmdb_id, title, slug, description, poster_url, backdrop_url, genres, rating, release_year, runtime, free_servers, vip_servers, is_published)
         VALUES (
           ${best.id},
           ${escapeSQL(best.title)},
@@ -230,7 +230,8 @@ async function main() {
           ${best.vote_average || 0},
           ${releaseYear || 'NULL'},
           ${details?.runtime || 'NULL'},
-          NULL,
+          '[]'::jsonb,
+          '[]'::jsonb,
           true
         ) ON CONFLICT (tmdb_id) DO NOTHING;`;
 

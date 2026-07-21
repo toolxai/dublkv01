@@ -6,9 +6,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface StreamServer {
-  url: string;
-  label: string;
-  enabled: boolean;
+  url?: string;
+  embed_code?: string;
+  input_type?: 'embed' | 'url';
+  name?: string;
+  label?: string;
+  enabled?: boolean;
 }
 
 interface WatchClientProps {
@@ -19,7 +22,6 @@ interface WatchClientProps {
     // Legacy columns (still supported)
     server1_url: string | null;
     server2_url: string | null;
-    bunny_video_id: string | null;
     // New server columns
     free_servers: StreamServer[] | null;
     vip_servers: StreamServer[] | null;
@@ -34,12 +36,32 @@ interface WatchClientProps {
 }
 
 /**
- * Convert a URL to an embeddable format.
- * - Google Drive share links → /preview embed
- * - Other URLs (playmogo, vidara, vidsonic, etc.) → pass through as-is
+ * Extract src URL from iframe code snippet if applicable
  */
-function getEmbedUrl(url: string): string {
+function extractSrcFromEmbed(input: string): string {
+  if (!input) return '';
+  const str = input.trim();
+  if (str.toLowerCase().includes('<iframe')) {
+    const match = str.match(/src=["']([^"']+)["']/i);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  return str;
+}
+
+/**
+ * Convert a server object or URL to an embeddable format.
+ * - Raw iframe snippet → extracts src URL
+ * - Google Drive share links → /preview embed
+ * - Other URLs (VOE, Abyss, FileMoon, Vibuxser, Morencius, Doodstream, Internet Archive, etc.) → pass through
+ */
+function getEmbedUrl(server: StreamServer | null): string {
+  if (!server) return '';
+  const rawInput = server.embed_code || server.url || '';
+  const url = extractSrcFromEmbed(rawInput);
   if (!url) return '';
+
   // Already a Google Drive preview URL
   if (url.includes('drive.google.com') && url.includes('/preview')) return url;
   // Google Drive share link: /file/d/FILE_ID/view
@@ -48,7 +70,7 @@ function getEmbedUrl(url: string): string {
   // Google Drive ?id= format
   const idMatch = url.match(/drive\.google\.com.*[?&]id=([^&]+)/);
   if (idMatch) return `https://drive.google.com/file/d/${idMatch[1]}/preview`;
-  // All other embed URLs (playmogo, vidara, vidsonic, etc.) — pass through
+
   return url;
 }
 
@@ -70,27 +92,24 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
   const [mobilePlayerStarted, setMobilePlayerStarted] = useState(false);
   const playerContainerRef = useRef<HTMLDivElement>(null);
 
-  // Build server list based on mode
-  const availableServers: { url: string; label: string }[] = (() => {
-    if (isFreeMode) {
-      // Use new free_servers, fall back to legacy server1/server2
-      const newServers = (movie.free_servers || []).filter(s => s.enabled);
-      if (newServers.length > 0) return newServers;
-      const legacy: { url: string; label: string }[] = [];
-      if (movie.server1_url) legacy.push({ url: movie.server1_url, label: 'Server 1' });
-      if (movie.server2_url) legacy.push({ url: movie.server2_url, label: 'Server 2' });
-      return legacy;
-    } else {
-      // VIP mode: use vip_servers, then fall back to free_servers, then legacy
-      const vipServers = (movie.vip_servers || []).filter(s => s.enabled);
-      if (vipServers.length > 0) return vipServers;
-      const freeServers = (movie.free_servers || []).filter(s => s.enabled);
-      if (freeServers.length > 0) return freeServers;
-      const legacy: { url: string; label: string }[] = [];
-      if (movie.server1_url) legacy.push({ url: movie.server1_url, label: 'Server 1' });
-      if (movie.server2_url) legacy.push({ url: movie.server2_url, label: 'Server 2' });
-      return legacy;
+  // Build server list based on mode — always display generic "Server 1", "Server 2", etc.
+  const availableServers: { url?: string; embed_code?: string; label: string }[] = (() => {
+    const rawList = isFreeMode
+      ? (movie.free_servers || []).filter((s: any) => s.enabled !== false)
+      : (movie.vip_servers || []).filter((s: any) => s.enabled !== false);
+
+    if (rawList.length > 0) {
+      return rawList.map((s, idx) => ({
+        ...s,
+        label: `Server ${idx + 1}`,
+      }));
     }
+
+    // Fallback legacy columns
+    const legacy: { url: string; label: string }[] = [];
+    if (movie.server1_url) legacy.push({ url: movie.server1_url, label: 'Server 1' });
+    if (movie.server2_url) legacy.push({ url: movie.server2_url, label: 'Server 2' });
+    return legacy;
   })();
 
   // In free mode, anyone can watch. In VIP mode, user must be logged in.
@@ -106,7 +125,7 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
   }, [isFreeMode, user, authLoading, movie.slug, router]);
 
   const currentServer = availableServers[activeServerIdx];
-  const embedUrl = currentServer ? getEmbedUrl(currentServer.url) : null;
+  const embedUrl = currentServer ? getEmbedUrl(currentServer) : null;
   const showGDriveOverlay = embedUrl ? isGoogleDriveUrl(embedUrl) : false;
 
   const handleServerSwitch = (idx: number) => {

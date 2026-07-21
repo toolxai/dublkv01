@@ -249,7 +249,8 @@ async function main() {
         rating: bestMatch.vote_average || 0,
         release_year: releaseYear,
         runtime: details?.runtime || null,
-        bunny_video_id: null,
+        free_servers: [],
+        vip_servers: [],
         is_published: true,
       });
 

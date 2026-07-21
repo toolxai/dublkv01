@@ -73,12 +73,32 @@ export default async function WatchPage({ params, searchParams }: Props) {
     // Strip VIP data entirely — free users should never see VIP URLs
     safeMovie.vip_servers = null;
   } else {
-    // VIP mode: verify the user is authenticated
+    // VIP mode: verify the user is authenticated and has verified purchase or admin status
     const user = await getAuthenticatedUser();
     if (!user) {
-      // Not authenticated — strip VIP URLs as a safety net
-      // (WatchClient will redirect them anyway)
       safeMovie.vip_servers = null;
+    } else {
+      const supabase = createAdminClient();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.is_admin) {
+        const { data: purchases } = await supabase
+          .from('purchases')
+          .select('type, movie_id, status')
+          .eq('user_id', user.id)
+          .eq('status', 'verified');
+
+        const hasFull = purchases?.some((p: any) => p.type === 'full');
+        const hasSingle = purchases?.some((p: any) => p.type === 'single' && p.movie_id === movie.id);
+
+        if (!hasFull && !hasSingle) {
+          safeMovie.vip_servers = null;
+        }
+      }
     }
   }
 

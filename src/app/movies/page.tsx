@@ -62,7 +62,12 @@ export default function CatalogPage() {
         result = [...result].sort((a, b) => (b.release_year || 0) - (a.release_year || 0));
         break;
       default:
-        break; // already sorted by created_at
+        result = [...result].sort((a, b) => {
+          const timeA = new Date(a.updated_at || a.created_at).getTime();
+          const timeB = new Date(b.updated_at || b.created_at).getTime();
+          return timeB - timeA;
+        });
+        break;
     }
 
     return result;
