@@ -7,6 +7,7 @@ import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import AuthModal from '@/components/auth/AuthModal';
 import AuthCodeRedirect from '@/components/ui/AuthCodeRedirect';
+import CommunityModal from '@/components/ui/CommunityModal';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -65,6 +66,7 @@ export default function RootLayout({
             </Suspense>
             <Navbar />
             <AuthModal />
+            <CommunityModal />
             <main className="flex-1 pb-20 md:pb-0">
               {children}
             </main>
