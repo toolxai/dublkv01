@@ -404,6 +404,16 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
           )}
         </div>
 
+        {/* FREE Mode Ads Notice */}
+        {isFreeMode && (
+          <div className="my-4 p-3.5 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3 text-amber-200 shadow-md shadow-amber-500/5">
+            <span className="text-lg leading-none mt-0.5 flex-shrink-0">⚠️</span>
+            <p className="text-xs sm:text-sm text-amber-200/95 leading-relaxed font-medium">
+              අපගේ free version එක මඟින් නොමිලේ සේවාව ලබා දෙන බැවින් ads play විය හැක. කරුණාකර ඒවා skip කර නැවත මෙම පිටුවට එන්න. Ads නොමැතිව පහසුවෙන්ම බලන්න sign up වී VIP වලට Upgrade වන්න.
+            </p>
+          </div>
+        )}
+
         {/* Player Info Bar */}
         <div className="mt-4 flex items-center justify-between flex-wrap gap-3">
           <div>
