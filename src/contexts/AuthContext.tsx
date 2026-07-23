@@ -49,56 +49,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const supabase = createClient();
 
-  // Save auth state to instant local cache for 0ms page hydration
-  const updateAuthCache = useCallback((u: User | null, r: UserRole, isAdm: boolean, maintain: boolean) => {
-    try {
-      if (u) {
-        localStorage.setItem('dublk_auth_cache', JSON.stringify({
-          user: u,
-          role: r,
-          isAdmin: isAdm,
-          canMaintain: maintain,
-          timestamp: Date.now(),
-        }));
-      } else {
-        localStorage.removeItem('dublk_auth_cache');
-      }
-    } catch {}
-  }, []);
-
-  // Try loading instant cache on mount (0ms latency)
-  useEffect(() => {
-    try {
-      const cached = localStorage.getItem('dublk_auth_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed?.user) {
-          setUser(parsed.user);
-          setRole(parsed.role || 'user');
-          setIsAdmin(Boolean(parsed.isAdmin));
-          setCanMaintain(Boolean(parsed.canMaintain));
-          setIsLoading(false); // Instant 0ms hydration!
-        }
-      }
-    } catch {}
-  }, []);
-
   const syncServerAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/me', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data.authenticated && data.user) {
-          const u = data.user;
-          const r = (data.role || 'user') as UserRole;
-          const isAdm = Boolean(data.isAdmin);
-          const maintain = Boolean(data.canMaintain);
-
-          setUser(u);
-          setRole(r);
-          setIsAdmin(isAdm);
-          setCanMaintain(maintain);
-          updateAuthCache(u, r, isAdm, maintain);
+          setUser(data.user);
+          setRole(data.role || 'user');
+          setIsAdmin(Boolean(data.isAdmin));
+          setCanMaintain(Boolean(data.canMaintain));
           return true;
         }
       }
@@ -106,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('[syncServerAuth] error:', err);
     }
     return false;
-  }, [updateAuthCache]);
+  }, []);
 
   const checkRole = useCallback(async (userId: string) => {
     try {
@@ -117,6 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error || !data) {
+        setIsAdmin(false);
+        setRole('user');
+        setCanMaintain(false);
         return;
       }
 
@@ -127,13 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAdmin(isAdm);
       setRole(userRole);
       setCanMaintain(maintain);
-      if (user) {
-        updateAuthCache(user, userRole, isAdm, maintain);
-      }
     } catch (err) {
       console.error('[checkRole] error:', err);
+      setIsAdmin(false);
+      setRole('user');
+      setCanMaintain(false);
     }
-  }, [supabase, user, updateAuthCache]);
+  }, [supabase]);
 
   useEffect(() => {
     let isMounted = true;
@@ -142,27 +105,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentUser = currentSession?.user ?? null;
       setSession(currentSession);
 
-      // Fast-path: If client has user, resolve state fast
-      if (currentUser) {
-        setUser(currentUser);
-        // Sync server auth and DB role in parallel
-        Promise.all([
-          syncServerAuth(),
-          checkRole(currentUser.id),
-        ]).finally(() => {
-          if (isMounted) setIsLoading(false);
-        });
-      } else {
-        // Fallback: Check server-side cookies for HttpOnly session
-        const serverSuccess = await syncServerAuth();
-        if (!serverSuccess) {
+      // 1. Try server sync first (most authoritative, bypasses document.cookie HttpOnly restrictions & RLS checks)
+      const serverSynced = await syncServerAuth();
+
+      // 2. If server sync did not return an authenticated user, fallback to client session check
+      if (!serverSynced) {
+        if (currentUser) {
+          setUser(currentUser);
+          await checkRole(currentUser.id);
+        } else {
           setUser(null);
           setIsAdmin(false);
           setRole('user');
           setCanMaintain(false);
-          updateAuthCache(null, 'user', false, false);
         }
-        if (isMounted) setIsLoading(false);
+      }
+
+      if (isMounted) {
+        setIsLoading(false);
       }
     };
 
@@ -202,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase, checkRole, syncServerAuth, updateAuthCache]);
+  }, [supabase, checkRole, syncServerAuth]);
 
   // When user logs in and there's a pending callback, execute it
   useEffect(() => {
@@ -236,7 +196,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAdmin(false);
       setRole('user');
       setCanMaintain(false);
-      updateAuthCache(null, 'user', false, false);
       previousUserRef.current = null;
       window.location.href = '/';
     }

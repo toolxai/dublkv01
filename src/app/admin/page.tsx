@@ -523,10 +523,10 @@ export default function AdminPage() {
     }
   };
 
-  if (isLoading || !canMaintain) {
+  if (isLoading || loading || !canMaintain) {
     return (
       <div className="pt-32 flex justify-center">
-        <LoadingSpinner size="lg" text="Loading..." />
+        <LoadingSpinner size="lg" text="Loading admin panel..." />
       </div>
     );
   }
