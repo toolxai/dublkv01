@@ -81,25 +81,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Synchronize both user session and profile roles atomically before clearing isLoading
     const syncUserAndRole = async (currentSession: Session | null) => {
       const currentUser = currentSession?.user ?? null;
-      setSession(currentSession);
-      setUser(currentUser);
+
+      let isAdm = false;
+      let userRole: UserRole = 'user';
+      let canM = false;
 
       if (currentUser) {
-        const { isAdm, userRole, canM } = await fetchProfileRole(currentUser.id);
-        if (isMounted) {
-          setIsAdmin(isAdm);
-          setRole(userRole);
-          setCanMaintain(canM);
-        }
-      } else {
-        if (isMounted) {
-          setIsAdmin(false);
-          setRole('user');
-          setCanMaintain(false);
-        }
+        const res = await fetchProfileRole(currentUser.id);
+        isAdm = res.isAdm;
+        userRole = res.userRole;
+        canM = res.canM;
       }
 
       if (isMounted) {
+        setSession(currentSession);
+        setUser(currentUser);
+        setIsAdmin(isAdm);
+        setRole(userRole);
+        setCanMaintain(canM);
         setIsLoading(false);
       }
     };

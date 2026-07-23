@@ -518,12 +518,16 @@ export default function AdminPage() {
     }
   };
 
-  if (isLoading || !user || !canMaintain) {
+  if (isLoading) {
     return (
       <div className="pt-32 flex justify-center">
         <LoadingSpinner size="lg" text="Verifying admin credentials..." />
       </div>
     );
+  }
+
+  if (!user || !canMaintain) {
+    return null;
   }
 
   // Filtered users for search
