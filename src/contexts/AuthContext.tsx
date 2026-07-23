@@ -49,6 +49,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const supabase = createClient();
 
+  const syncServerAuth = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+          setRole(data.role || 'user');
+          setIsAdmin(Boolean(data.isAdmin));
+          setCanMaintain(Boolean(data.canMaintain));
+          return true;
+        }
+      }
+    } catch (err) {
+      console.error('[syncServerAuth] error:', err);
+    }
+    return false;
+  }, []);
+
   const checkRole = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -85,14 +104,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleSession = async (currentSession: Session | null) => {
       const currentUser = currentSession?.user ?? null;
       setSession(currentSession);
-      setUser(currentUser);
 
       if (currentUser) {
+        setUser(currentUser);
         await checkRole(currentUser.id);
       } else {
-        setIsAdmin(false);
-        setRole('user');
-        setCanMaintain(false);
+        // Fallback: Check server-side cookies (for HttpOnly production cookies on refresh)
+        const serverSuccess = await syncServerAuth();
+        if (!serverSuccess) {
+          setUser(null);
+          setIsAdmin(false);
+          setRole('user');
+          setCanMaintain(false);
+        }
       }
 
       if (isMounted) {
@@ -136,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase, checkRole]);
+  }, [supabase, checkRole, syncServerAuth]);
 
   // When user logs in and there's a pending callback, execute it
   useEffect(() => {
