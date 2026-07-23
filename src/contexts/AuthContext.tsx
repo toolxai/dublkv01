@@ -105,13 +105,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentUser = currentSession?.user ?? null;
       setSession(currentSession);
 
-      if (currentUser) {
-        setUser(currentUser);
-        await checkRole(currentUser.id);
-      } else {
-        // Fallback: Check server-side cookies (for HttpOnly production cookies on refresh)
-        const serverSuccess = await syncServerAuth();
-        if (!serverSuccess) {
+      // 1. Try server sync first (most authoritative, bypasses document.cookie HttpOnly restrictions & RLS checks)
+      const serverSynced = await syncServerAuth();
+
+      // 2. If server sync did not return an authenticated user, fallback to client session check
+      if (!serverSynced) {
+        if (currentUser) {
+          setUser(currentUser);
+          await checkRole(currentUser.id);
+        } else {
           setUser(null);
           setIsAdmin(false);
           setRole('user');

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
@@ -39,8 +40,16 @@ export async function GET() {
       });
     }
 
-    // Query public.profiles for role and is_admin
-    const { data: profile } = await supabase
+    // Use service role client if available to bypass RLS and guarantee reading profile & is_admin
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const isServiceJwt = serviceKey.startsWith('eyJ');
+    const dbClient = isServiceJwt
+      ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        })
+      : supabase;
+
+    const { data: profile } = await dbClient
       .from('profiles')
       .select('*')
       .eq('id', user.id)
