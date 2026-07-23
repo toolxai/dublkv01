@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import GlobalSearch from '@/components/ui/GlobalSearch';
 import MobileFooterNav from '@/components/ui/MobileFooterNav';
@@ -11,10 +11,18 @@ import MobileFooterNav from '@/components/ui/MobileFooterNav';
 export default function Navbar() {
   const { user, isAdmin, canMaintain, openAuthModal, signOut } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    setProfileOpen(false);
+    setMobileOpen(false);
+    await signOut();
+    router.push('/');
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -155,7 +163,7 @@ export default function Navbar() {
                             Dashboard
                           </Link>
                           <button
-                            onClick={() => { signOut(); setProfileOpen(false); }}
+                            onClick={handleSignOut}
                             className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

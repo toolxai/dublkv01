@@ -44,12 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [canMaintain, setCanMaintain] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalCallback, setAuthModalCallback] = useState<(() => void) | null>(null);
+
   const previousUserRef = useRef<User | null>(null);
   const initialLoadRef = useRef(true);
 
+  // Singleton Supabase browser client
   const supabase = createClient();
 
-  const checkRole = useCallback(async (userId: string) => {
+  // Atomically fetch profile role from Supabase
+  const fetchProfileRole = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -58,68 +61,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error || !data) {
-        setIsAdmin(false);
-        setRole('user');
-        setCanMaintain(false);
-        return;
+        return { isAdm: false, userRole: 'user' as UserRole, canM: false };
       }
 
       const isAdm = Boolean(data.is_admin === true || data.role === 'admin');
       const userRole: UserRole = (data.role as UserRole) || (isAdm ? 'admin' : 'user');
+      const canM = isAdm || userRole === 'editor' || userRole === 'moderator';
 
-      setIsAdmin(isAdm);
-      setRole(userRole);
-      setCanMaintain(isAdm || userRole === 'editor' || userRole === 'moderator');
+      return { isAdm, userRole, canM };
     } catch (err) {
-      console.error('[checkRole] error:', err);
-      setIsAdmin(false);
-      setRole('user');
-      setCanMaintain(false);
+      console.error('[fetchProfileRole] error:', err);
+      return { isAdm: false, userRole: 'user' as UserRole, canM: false };
     }
   }, [supabase]);
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      previousUserRef.current = session?.user ?? null;
-      if (session?.user) {
-        await checkRole(session.user.id);
-      }
-      setIsLoading(false);
-      initialLoadRef.current = false;
-    };
+    let isMounted = true;
 
-    getSession();
+    // Synchronize both user session and profile roles atomically before clearing isLoading
+    const syncUserAndRole = async (currentSession: Session | null) => {
+      const currentUser = currentSession?.user ?? null;
+      setSession(currentSession);
+      setUser(currentUser);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        const prevUser = previousUserRef.current;
-        const newUser = session?.user ?? null;
-
-        setSession(session);
-        setUser(newUser);
-
-        if (newUser) {
-          await checkRole(newUser.id);
-        } else {
+      if (currentUser) {
+        const { isAdm, userRole, canM } = await fetchProfileRole(currentUser.id);
+        if (isMounted) {
+          setIsAdmin(isAdm);
+          setRole(userRole);
+          setCanMaintain(canM);
+        }
+      } else {
+        if (isMounted) {
           setIsAdmin(false);
           setRole('user');
           setCanMaintain(false);
         }
+      }
 
+      if (isMounted) {
         setIsLoading(false);
+      }
+    };
 
-        // Show toast notifications for auth events (only after initial load)
-        // Uses the global toast function to avoid provider ordering issues
+    // Initial session retrieval
+    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+      if (!isMounted) return;
+      await syncUserAndRole(initialSession);
+      previousUserRef.current = initialSession?.user ?? null;
+      initialLoadRef.current = false;
+    });
+
+    // Handle authentication state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        if (!isMounted) return;
+
+        const prevUser = previousUserRef.current;
+        const newUser = currentSession?.user ?? null;
+
+        await syncUserAndRole(currentSession);
+
+        // Toast notifications for explicit sign-in / sign-out events (only after initial load)
         if (!initialLoadRef.current) {
-          if (!prevUser && newUser) {
-            // User just signed in
+          if (!prevUser && newUser && event === 'SIGNED_IN') {
             const name = newUser.user_metadata?.full_name || newUser.email?.split('@')[0] || '';
             showToastGlobal(`Welcome${name ? `, ${name}` : ''}! You're signed in.`, 'success');
-          } else if (prevUser && !newUser) {
-            // User just signed out
+          } else if (prevUser && !newUser && event === 'SIGNED_OUT') {
             showToastGlobal('You have been signed out successfully.', 'info');
           }
         }
@@ -128,8 +136,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, [supabase, checkRole]);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase, fetchProfileRole]);
 
   // When user logs in and there's a pending callback, execute it
   useEffect(() => {
@@ -153,12 +164,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setIsAdmin(false);
-    setRole('user');
-    setCanMaintain(false);
+    try {
+      setIsLoading(true);
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('[signOut] error:', err);
+    } finally {
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+      setRole('user');
+      setCanMaintain(false);
+      setIsLoading(false);
+      previousUserRef.current = null;
+    }
   }, [supabase]);
 
   return (

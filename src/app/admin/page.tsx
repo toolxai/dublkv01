@@ -113,8 +113,9 @@ export default function AdminPage() {
   // Fetch movies and payments
   useEffect(() => {
     async function fetchData() {
-      if (!user || !canMaintain) return;
+      if (isLoading || !user || !canMaintain) return;
 
+      setLoading(true);
       try {
         const [moviesRes, paymentsRes] = await Promise.all([
           fetch('/api/admin/movies'),
@@ -137,7 +138,7 @@ export default function AdminPage() {
     }
 
     fetchData();
-  }, [user, isAdmin]);
+  }, [user, canMaintain, isLoading]);
 
   // Fetch users when users tab is opened
   useEffect(() => {
@@ -517,10 +518,10 @@ export default function AdminPage() {
     }
   };
 
-  if (isLoading || !isAdmin) {
+  if (isLoading || !user || !canMaintain) {
     return (
       <div className="pt-32 flex justify-center">
-        <LoadingSpinner size="lg" text="Loading admin panel..." />
+        <LoadingSpinner size="lg" text="Verifying admin credentials..." />
       </div>
     );
   }

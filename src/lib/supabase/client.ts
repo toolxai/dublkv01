@@ -2,11 +2,15 @@
 
 import { createBrowserClient } from '@supabase/ssr';
 
-// Do NOT use a singleton — a fresh client per call ensures the PKCE
-// code verifier and session storage are always properly initialised.
+let client: ReturnType<typeof createBrowserClient> | null = null;
+
 export function createClient() {
-  return createBrowserClient(
+  if (client) return client;
+
+  client = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  return client;
 }
