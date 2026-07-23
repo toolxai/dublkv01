@@ -47,13 +47,13 @@ function getServiceClient() {
   );
 }
 
-async function canMaintainUsers(supabase: any, userId: string): Promise<boolean> {
+async function isAdmin(supabase: any, userId: string): Promise<boolean> {
   const { data } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', userId)
     .maybeSingle();
-  return Boolean(data?.is_admin === true || data?.role === 'admin' || data?.role === 'editor' || data?.role === 'moderator');
+  return Boolean(data?.is_admin === true || data?.role === 'admin');
 }
 
 // ─── GET — List all users with their purchases ────────────────────────────────
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
   const authClient  = getAuthClient();
   const { data: { user } } = await authClient.auth.getUser();
 
-  if (!user || !(await canMaintainUsers(authClient, user.id))) {
+  if (!user || !(await isAdmin(authClient, user.id))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
@@ -102,7 +102,7 @@ export async function PATCH(request: NextRequest) {
   const authClient = getAuthClient();
   const { data: { user } } = await authClient.auth.getUser();
 
-  if (!user || !(await canMaintainUsers(authClient, user.id))) {
+  if (!user || !(await isAdmin(authClient, user.id))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
   const authClient = getAuthClient();
   const { data: { user } } = await authClient.auth.getUser();
 
-  if (!user || !(await canMaintainUsers(authClient, user.id))) {
+  if (!user || !(await isAdmin(authClient, user.id))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
@@ -216,7 +216,7 @@ export async function DELETE(request: NextRequest) {
   const authClient = getAuthClient();
   const { data: { user } } = await authClient.auth.getUser();
 
-  if (!user || !(await canMaintainUsers(authClient, user.id))) {
+  if (!user || !(await isAdmin(authClient, user.id))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 

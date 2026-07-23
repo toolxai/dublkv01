@@ -113,7 +113,11 @@ export default function AdminPage() {
   // Fetch movies and payments
   useEffect(() => {
     async function fetchData() {
-      if (isLoading || !user || !canMaintain) return;
+      if (isLoading) return;
+      if (!user || !canMaintain) {
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
       try {
@@ -143,7 +147,8 @@ export default function AdminPage() {
   // Fetch users when users tab is opened
   useEffect(() => {
     async function fetchUsers() {
-      if (tab !== 'users' || users.length > 0) return;
+      if (isLoading) return;
+      if (tab !== 'users' || users.length > 0 || !user || !canMaintain) return;
       setUsersLoading(true);
       try {
         const res = await fetch('/api/admin/users');
@@ -158,7 +163,7 @@ export default function AdminPage() {
       }
     }
     fetchUsers();
-  }, [tab, users.length]);
+  }, [tab, users.length, user, canMaintain, isLoading]);
 
   // Search TMDB
   const handleTmdbSearch = async () => {
@@ -518,16 +523,12 @@ export default function AdminPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !isAdmin) {
     return (
       <div className="pt-32 flex justify-center">
-        <LoadingSpinner size="lg" text="Verifying admin credentials..." />
+        <LoadingSpinner size="lg" text="Loading admin panel..." />
       </div>
     );
-  }
-
-  if (!user || !canMaintain) {
-    return null;
   }
 
   // Filtered users for search

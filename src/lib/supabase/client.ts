@@ -2,7 +2,7 @@
 
 import { createBrowserClient } from '@supabase/ssr';
 
-let client: ReturnType<typeof createBrowserClient> | null = null;
+let client: ReturnType<typeof createBrowserClient> | undefined;
 
 export function createClient() {
   if (typeof window === 'undefined') {
