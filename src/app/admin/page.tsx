@@ -104,6 +104,9 @@ export default function AdminPage() {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState('');
 
+  // Payment proof viewer state
+  const [viewingProof, setViewingProof] = useState<{ id: string; url: string; email: string; method: string; isPdf: boolean } | null>(null);
+
   useEffect(() => {
     if (!isLoading && (!user || !canMaintain)) {
       router.push('/');
@@ -993,62 +996,173 @@ export default function AdminPage() {
 
         {/* Payments Tab */}
         {tab === 'payments' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {purchases.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 rounded-full bg-dark-800 flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">💳</span>
                 </div>
                 <p className="text-dark-400 mb-1">No pending payments</p>
-                <p className="text-dark-500 text-sm">New payments will appear here when users submit payment proof</p>
+                <p className="text-dark-500 text-sm">New payments will appear here when users submit payment receipt proof</p>
               </div>
             ) : (
-              purchases.map((purchase) => (
-                <div
-                  key={purchase.id}
-                  className="p-4 rounded-xl bg-dark-800/50 border border-white/5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-white">
-                        {purchase.profiles?.email || 'Unknown User'}
-                      </p>
-                      <p className="text-xs text-dark-500 mt-0.5">
-                        {purchase.type === 'full' ? '👑 Full Access' : `🎬 ${purchase.movies?.title || 'Single Movie'}`} •
-                        {' '}{formatCurrency(purchase.amount)} •
-                        {' '}{purchase.payment_method} •
-                        {' '}{timeAgo(purchase.created_at)}
-                      </p>
-                      {purchase.payment_proof_url && (
-                        <a
-                          href={purchase.payment_proof_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-2 text-xs text-brand-400 hover:text-brand-300 transition-colors"
+              purchases.map((purchase) => {
+                const proofUrl = purchase.payment_proof_url || '';
+                const isPdf = proofUrl.includes('data:application/pdf') || proofUrl.toLowerCase().endsWith('.pdf');
+
+                return (
+                  <div
+                    key={purchase.id}
+                    className="p-4 rounded-xl bg-dark-800/50 border border-white/5 hover:border-white/10 transition-all"
+                  >
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <p className="text-sm font-semibold text-white truncate">
+                            {purchase.profiles?.email || 'Unknown User'}
+                          </p>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                            {purchase.type === 'full' ? '👑 VIP Lifetime' : `🎬 ${purchase.movies?.title || 'Single Movie'}`}
+                          </span>
+                        </div>
+                        <p className="text-xs text-dark-400">
+                          Amount: <span className="font-semibold text-white">{formatCurrency(purchase.amount)}</span> •
+                          {' '}Method: <span className="font-semibold text-brand-300">{purchase.payment_method}</span> •
+                          {' '}{timeAgo(purchase.created_at)}
+                        </p>
+
+                        {/* Slip Attachment Button */}
+                        {proofUrl && (
+                          <div className="mt-3 flex items-center gap-2 flex-wrap">
+                            <button
+                              onClick={() => setViewingProof({
+                                id: purchase.id,
+                                url: proofUrl,
+                                email: purchase.profiles?.email || 'User',
+                                method: purchase.payment_method,
+                                isPdf,
+                              })}
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-brand-500/10 text-brand-300 border border-brand-500/25 hover:bg-brand-500/20 transition-all inline-flex items-center gap-1.5"
+                            >
+                              {isPdf ? '📄 View PDF Receipt Slip' : '🖼️ View Image Receipt Slip'}
+                            </button>
+
+                            <a
+                              href={proofUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 text-dark-300 border border-white/10 hover:bg-white/10 hover:text-white transition-all inline-flex items-center gap-1"
+                            >
+                              ↗ Open External
+                            </a>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto">
+                        <button
+                          onClick={() => verifyPayment(purchase.id, 'verified')}
+                          disabled={actionLoading === purchase.id}
+                          className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-semibold rounded-xl bg-green-500/15 text-green-400 border border-green-500/30 hover:bg-green-500/25 transition-all disabled:opacity-50 shadow-lg shadow-green-500/5"
                         >
-                          📎 View Payment Proof
-                        </a>
-                      )}
+                          {actionLoading === purchase.id ? 'Processing...' : '✓ Approve & Grant VIP'}
+                        </button>
+                        <button
+                          onClick={() => verifyPayment(purchase.id, 'rejected')}
+                          disabled={actionLoading === purchase.id}
+                          className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-semibold rounded-xl bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25 transition-all disabled:opacity-50"
+                        >
+                          ✗ Reject
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                  </div>
+                );
+              })
+            )}
+
+            {/* Proof Modal Viewer */}
+            {viewingProof && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setViewingProof(null)} />
+                <div className="relative w-full max-w-4xl max-h-[90vh] bg-dark-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-10 animate-scale-in">
+                  {/* Modal Header */}
+                  <div className="p-4 border-b border-white/10 flex items-center justify-between bg-dark-800/80">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{viewingProof.isPdf ? '📄' : '🖼️'}</span>
+                        <h3 className="text-base font-semibold text-white">
+                          Payment Slip — {viewingProof.email}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-dark-400 mt-0.5">
+                        Method: {viewingProof.method} • Format: {viewingProof.isPdf ? 'PDF Document' : 'Image Receipt'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setViewingProof(null)}
+                      className="p-1 rounded-lg text-dark-400 hover:text-white hover:bg-white/5 transition-all"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Modal Body / Viewer */}
+                  <div className="flex-1 p-4 overflow-y-auto bg-black/50 flex justify-center items-center min-h-[400px]">
+                    {viewingProof.isPdf ? (
+                      <div className="w-full h-[60vh] flex flex-col items-center justify-center">
+                        <object
+                          data={viewingProof.url}
+                          type="application/pdf"
+                          className="w-full h-full rounded-xl border border-white/10 bg-dark-950"
+                        >
+                          <iframe src={viewingProof.url} className="w-full h-full rounded-xl border border-white/10" title="PDF Receipt Viewer" />
+                        </object>
+                      </div>
+                    ) : (
+                      <img
+                        src={viewingProof.url}
+                        alt="Payment Receipt Proof"
+                        className="max-h-[65vh] w-auto max-w-full object-contain rounded-xl border border-white/10 shadow-2xl"
+                      />
+                    )}
+                  </div>
+
+                  {/* Modal Footer Actions */}
+                  <div className="p-4 border-t border-white/10 bg-dark-800/80 flex items-center justify-between gap-3">
+                    <a
+                      href={viewingProof.url}
+                      download={`payment-slip-${viewingProof.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 text-xs font-medium rounded-lg bg-white/5 text-dark-300 hover:bg-white/10 hover:text-white border border-white/10 transition-all"
+                    >
+                      📥 Download Original File
+                    </a>
+
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => verifyPayment(purchase.id, 'verified')}
-                        disabled={actionLoading === purchase.id}
-                        className="px-4 py-2 text-xs font-medium rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 transition-all disabled:opacity-50"
+                        onClick={async () => {
+                          await verifyPayment(viewingProof.id, 'verified');
+                          setViewingProof(null);
+                        }}
+                        className="px-5 py-2 text-xs font-semibold rounded-xl bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 transition-all shadow-lg"
                       >
-                        ✓ Approve
+                        ✓ Approve &amp; Grant VIP Access
                       </button>
                       <button
-                        onClick={() => verifyPayment(purchase.id, 'rejected')}
-                        disabled={actionLoading === purchase.id}
-                        className="px-4 py-2 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all disabled:opacity-50"
+                        onClick={async () => {
+                          await verifyPayment(viewingProof.id, 'rejected');
+                          setViewingProof(null);
+                        }}
+                        className="px-4 py-2 text-xs font-semibold rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all"
                       >
                         ✗ Reject
                       </button>
                     </div>
                   </div>
                 </div>
-              ))
+              </div>
             )}
           </div>
         )}

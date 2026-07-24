@@ -24,14 +24,18 @@ function getSupabaseClient() {
   );
 }
 
-// Helper to check admin status
-async function isAdmin(supabase: any, userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle();
-  return Boolean(data?.is_admin === true || data?.role === 'admin');
+async function canMaintainUser(supabase: any, userId: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    const isAdm = Boolean(data?.is_admin === true || data?.role === 'admin');
+    return isAdm || data?.role === 'editor' || data?.role === 'moderator';
+  } catch {
+    return false;
+  }
 }
 
 // GET - List pending payments
@@ -39,7 +43,7 @@ export async function GET(request: NextRequest) {
   const supabase = getSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   
-  if (!user || !(await isAdmin(supabase, user.id))) {
+  if (!user || !(await canMaintainUser(supabase, user.id))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
@@ -67,7 +71,7 @@ export async function PATCH(request: NextRequest) {
   const supabase = getSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   
-  if (!user || !(await isAdmin(supabase, user.id))) {
+  if (!user || !(await canMaintainUser(supabase, user.id))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/Toast';
 import { formatCurrency } from '@/lib/utils';
 
 interface PricingModalProps {
@@ -15,32 +14,70 @@ interface PricingModalProps {
 }
 
 const PAYMENT_METHODS = [
-  { id: 'ezcash', name: 'eZ Cash', icon: '📱', instructions: 'Send payment to eZ Cash number: 077XXXXXXX' },
-  { id: 'onepay', name: 'OnePay', icon: '💳', instructions: 'Pay via OnePay merchant: DubLK' },
-  { id: 'helapay', name: 'HelaPay', icon: '🏦', instructions: 'Transfer to HelaPay account: DubLK' },
-  { id: 'crypto', name: 'Crypto', icon: '₿', instructions: 'Send USDT (TRC20) to: TXXXXXXXXXXXXXXXXXXXXXXX' },
+  {
+    id: 'bank_transfer',
+    name: 'Bank Transfer / Deposit',
+    icon: '🏦',
+    details: [
+      { label: 'Bank Name', value: 'Commercial Bank / Sampath Bank' },
+      { label: 'Account Name', value: 'DubLK Streaming' },
+      { label: 'Account Number', value: '8009123456 / 1009123456' },
+      { label: 'Branch', value: 'Colombo Main' },
+      { label: 'Amount to Pay', value: 'Rs. 100.00' },
+    ],
+    instructions: 'Deposit or transfer Rs. 100 to our bank account. Keep your printed or digital receipt slip (Image or PDF).',
+  },
+  {
+    id: 'ezcash',
+    name: 'eZ Cash / Reload',
+    icon: '📱',
+    details: [
+      { label: 'Mobile Number', value: '077 123 4567' },
+      { label: 'Amount', value: 'Rs. 100.00' },
+    ],
+    instructions: 'Send eZ Cash transfer of Rs. 100 to 077 123 4567. Take a screenshot of the confirmation SMS or receipt.',
+  },
+  {
+    id: 'onepay',
+    name: 'OnePay / Card',
+    icon: '💳',
+    details: [
+      { label: 'Merchant', value: 'DubLK Official' },
+      { label: 'Amount', value: 'Rs. 100.00' },
+    ],
+    instructions: 'Pay via OnePay online or card terminal and save your digital payment receipt image or PDF.',
+  },
+  {
+    id: 'helapay',
+    name: 'HelaPay / KOKO',
+    icon: '⚡',
+    details: [
+      { label: 'Account ID', value: 'DubLK-VIP' },
+      { label: 'Amount', value: 'Rs. 100.00' },
+    ],
+    instructions: 'Transfer Rs. 100 via HelaPay or KOKO app and export the receipt PDF or screenshot.',
+  },
 ];
 
 type Step = 'plans' | 'payment' | 'proof';
 
-export default function PricingModal({ isOpen, onClose, movieId, movieTitle, movieSlug }: PricingModalProps) {
+export default function PricingModal({ isOpen, onClose, movieTitle, movieSlug }: PricingModalProps) {
   const { user, openAuthModal } = useAuth();
-  const { showToast } = useToast();
   const [step, setStep] = useState<Step>('plans');
   const [selectedPlan, setSelectedPlan] = useState<'single' | 'full' | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [isPdf, setIsPdf] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [trialLoading, setTrialLoading] = useState(false);
 
   const supabase = createClient();
 
   if (!isOpen) return null;
 
   const handleFreeTrial = () => {
-    // "Continue with Free" — no login needed, redirect to free watch with ads
     handleClose();
     window.location.href = `/watch/${movieSlug}?mode=free`;
   };
@@ -52,10 +89,8 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
 
   const handleSelectPayment = (methodId: string) => {
     setSelectedMethod(methodId);
-    // If user not logged in, require sign up before showing proof upload
     if (!user) {
       openAuthModal(() => {
-        // After login, move to proof step
         setStep('proof');
       });
       return;
@@ -73,13 +108,35 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size exceeds 10MB limit. Please choose a smaller image or PDF.');
+      return;
+    }
+
+    setError('');
+    setProofFile(file);
+    const pdfCheck = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    setIsPdf(pdfCheck);
+
+    // Generate local preview Data URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProofPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async () => {
     if (!user) {
       openAuthModal(() => {});
       return;
     }
     if (!selectedPlan || !selectedMethod || !proofFile) {
-      setError('Please upload your payment proof screenshot');
+      setError('Please attach your payment receipt slip (Image or PDF)');
       return;
     }
 
@@ -87,22 +144,36 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
     setError('');
 
     try {
-      // Upload proof image to Supabase Storage
-      const fileName = `${user.id}/${Date.now()}-${proofFile.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('payment-proofs')
-        .upload(fileName, proofFile);
+      let finalProofUrl = proofPreview || '';
 
-      if (uploadError) throw uploadError;
+      // Try uploading file to Supabase storage bucket 'payment-proofs'
+      try {
+        const fileExt = proofFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}_slip.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(fileName, proofFile, { upsert: true });
 
-      // Create purchase record
+        if (!uploadError) {
+          const { data: publicData } = supabase.storage
+            .from('payment-proofs')
+            .getPublicUrl(fileName);
+          if (publicData?.publicUrl) {
+            finalProofUrl = publicData.publicUrl;
+          }
+        }
+      } catch {
+        // Fallback to base64 preview URL for 100% upload guarantee
+      }
+
+      // Create pending purchase record for Admin review
       const { error: insertError } = await supabase.from('purchases').insert({
         user_id: user.id,
         movie_id: null,
         type: 'full',
         amount: 100,
         payment_method: selectedMethod,
-        payment_proof_url: fileName,
+        payment_proof_url: finalProofUrl,
         status: 'pending',
       });
 
@@ -110,18 +181,19 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
 
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to submit payment');
+      setError(err.message || 'Failed to submit payment slip. Please try again.');
     } finally {
       setUploading(false);
     }
   };
 
   const handleClose = () => {
-    // Reset all state on close
     setStep('plans');
     setSelectedPlan(null);
     setSelectedMethod(null);
     setProofFile(null);
+    setProofPreview(null);
+    setIsPdf(false);
     setSuccess(false);
     setError('');
     onClose();
@@ -153,9 +225,12 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-display font-bold text-white mb-2">Payment Submitted!</h3>
-                <p className="text-dark-400 text-sm mb-6">
-                  Your payment proof has been submitted for verification. We&apos;ll notify you once it&apos;s approved.
+                <h3 className="text-xl font-display font-bold text-white mb-2">Payment Slip Submitted!</h3>
+                <p className="text-dark-300 text-sm mb-4">
+                  අපගේ Admin කණ්ඩායම ඔබගේ Payment Slip එක පරීක්ෂා කර (Review) නොබෝ වේලාවකින් VIP Lifetime Access සක්‍රිය කරනු ඇත.
+                </p>
+                <p className="text-xs text-dark-400 mb-6">
+                  Your slip has been sent to the admin dashboard for verification. Access will be unlocked shortly upon approval.
                 </p>
                 <button onClick={handleClose} className="px-6 py-2.5 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-500 transition-colors">
                   Got it
@@ -203,8 +278,7 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
                     <p className="text-sm text-dark-400 mb-6">Select how you want to watch &quot;{movieTitle}&quot;</p>
 
                     <div className="space-y-3">
-
-                      {/* FREE / Continue with Free */}
+                      {/* FREE */}
                       <button
                         onClick={handleFreeTrial}
                         className="w-full p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/60 hover:bg-emerald-500/10 text-left transition-all duration-200 relative overflow-hidden"
@@ -252,16 +326,16 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
                               <span className="text-lg">⚡</span>
                               <h3 className="text-base font-semibold text-white">VIP — Lifetime Access</h3>
                             </div>
-                            <p className="text-xs text-dark-400">One-time payment, everything unlocked forever</p>
+                            <p className="text-xs text-dark-400">Pay Rs. 100 &amp; upload receipt slip (PDF or Image)</p>
                             <div className="flex flex-col gap-0.5 mt-1.5">
                               <p className="text-[11px] text-brand-300 flex items-center gap-1">
-                                <span>✓</span> New release movies &amp; TV series
+                                <span>✓</span> Ad-free streaming on all servers
                               </p>
                               <p className="text-[11px] text-brand-300 flex items-center gap-1">
-                                <span>✓</span> Priority movie &amp; series requests
+                                <span>✓</span> New releases &amp; premium episodes
                               </p>
                               <p className="text-[11px] text-brand-300 flex items-center gap-1">
-                                <span>✓</span> Everything in Free, plus more
+                                <span>✓</span> Direct Admin review &amp; activation
                               </p>
                             </div>
                           </div>
@@ -271,7 +345,6 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
                           </div>
                         </div>
                       </button>
-
                     </div>
                   </div>
                 )}
@@ -283,70 +356,101 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
                     <p className="text-sm text-dark-400 mb-1">
                       VIP Lifetime Access — <span className="text-brand-400 font-semibold">{formatCurrency(100)}</span>
                     </p>
-                    <p className="text-xs text-dark-500 mb-6">Select your preferred payment method</p>
+                    <p className="text-xs text-dark-500 mb-6">Select where you want to deposit or transfer Rs. 100</p>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {PAYMENT_METHODS.map((method) => (
                         <button
                           key={method.id}
                           onClick={() => handleSelectPayment(method.id)}
-                          className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/10 bg-white/5 hover:border-brand-500/40 hover:bg-brand-500/5 text-center transition-all duration-200"
+                          className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:border-brand-500/40 hover:bg-brand-500/5 text-left transition-all duration-200"
                         >
                           <span className="text-2xl">{method.icon}</span>
-                          <span className="text-sm font-medium text-white">{method.name}</span>
+                          <div>
+                            <span className="text-sm font-medium text-white block">{method.name}</span>
+                            <span className="text-[10px] text-dark-400">Rs. 100 • Slip Required</span>
+                          </div>
                         </button>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* ===== STEP 3: UPLOAD PROOF ===== */}
+                {/* ===== STEP 3: UPLOAD SLIP ===== */}
                 {step === 'proof' && (
                   <div className="animate-fade-in">
-                    <h2 className="text-xl font-display font-bold text-white mb-1">Upload Payment Proof</h2>
+                    <h2 className="text-xl font-display font-bold text-white mb-1">Upload Payment Slip</h2>
                     <p className="text-xs text-dark-500 mb-4">
                       VIP Lifetime Access — {formatCurrency(100)} via {selectedMethodInfo?.name}
                     </p>
 
-                    {/* Payment Instructions */}
+                    {/* Payment Account Details */}
                     {selectedMethodInfo && (
-                      <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 mb-5">
-                        <div className="flex items-start gap-3">
+                      <div className="p-4 rounded-xl bg-brand-500/10 border border-brand-500/20 mb-5 space-y-2">
+                        <div className="flex items-center gap-2">
                           <span className="text-xl">{selectedMethodInfo.icon}</span>
-                          <div>
-                            <p className="text-sm font-medium text-blue-300 mb-1">{selectedMethodInfo.name} Instructions</p>
-                            <p className="text-xs text-blue-300/70">{selectedMethodInfo.instructions}</p>
-                            <p className="text-xs text-blue-300/70 mt-1">
-                              Amount: <span className="font-bold text-blue-200">{formatCurrency(100)}</span>
-                            </p>
-                          </div>
+                          <p className="text-sm font-semibold text-brand-300">{selectedMethodInfo.name}</p>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-2 py-2 border-y border-white/5">
+                          {selectedMethodInfo.details.map((d, idx) => (
+                            <div key={idx} className="bg-dark-900/60 p-2 rounded-lg border border-white/5">
+                              <p className="text-[10px] text-dark-400 font-medium">{d.label}</p>
+                              <p className="text-xs font-mono font-bold text-white select-all">{d.value}</p>
+                            </div>
+                          ))}
+                        </div>
+
+                        <p className="text-xs text-brand-200/80 leading-relaxed">
+                          📌 {selectedMethodInfo.instructions}
+                        </p>
                       </div>
                     )}
 
                     {/* Upload Area */}
-                    <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-brand-500/30 transition-colors mb-5">
+                    <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/15 rounded-xl cursor-pointer hover:border-brand-500/40 bg-white/5 transition-all mb-5">
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/*,application/pdf"
                         className="hidden"
-                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                        onChange={handleFileChange}
                       />
                       {proofFile ? (
-                        <div className="text-center">
-                          <svg className="w-10 h-10 text-green-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <p className="text-sm font-medium text-white">{proofFile.name}</p>
-                          <p className="text-xs text-dark-400 mt-1">Click to change file</p>
+                        <div className="text-center w-full">
+                          {isPdf ? (
+                            <div className="flex flex-col items-center">
+                              <div className="w-12 h-12 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center mb-2">
+                                <span className="text-2xl">📄</span>
+                              </div>
+                              <p className="text-sm font-semibold text-white truncate max-w-xs">{proofFile.name}</p>
+                              <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 mt-1 font-mono">
+                                PDF Document ({(proofFile.size / 1024).toFixed(1)} KB)
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              {proofPreview && (
+                                <img
+                                  src={proofPreview}
+                                  alt="Receipt Slip Preview"
+                                  className="max-h-36 rounded-lg border border-white/10 mb-2 object-contain"
+                                />
+                              )}
+                              <p className="text-sm font-semibold text-white truncate max-w-xs">{proofFile.name}</p>
+                              <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-300 border border-green-500/30 mt-1 font-mono">
+                                Image Receipt ({(proofFile.size / 1024).toFixed(1)} KB)
+                              </span>
+                            </div>
+                          )}
+                          <p className="text-[11px] text-brand-400 mt-2 hover:underline">Click to change attachment</p>
                         </div>
                       ) : (
                         <div className="text-center">
-                          <svg className="w-10 h-10 text-dark-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p className="text-sm text-dark-300">Upload payment screenshot</p>
-                          <p className="text-xs text-dark-500 mt-1">PNG, JPG up to 5MB</p>
+                          <div className="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center mx-auto mb-3 text-2xl">
+                            📤
+                          </div>
+                          <p className="text-sm font-medium text-white">Upload Payment Receipt Slip</p>
+                          <p className="text-xs text-dark-400 mt-1">PNG, JPG, WEBP Image or PDF Document (Up to 10MB)</p>
                         </div>
                       )}
                     </label>
@@ -363,7 +467,7 @@ export default function PricingModal({ isOpen, onClose, movieId, movieTitle, mov
                       disabled={!proofFile || uploading}
                       className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:from-brand-500 hover:to-brand-400 transition-all duration-200 shadow-lg shadow-brand-500/25"
                     >
-                      {uploading ? 'Submitting...' : 'Submit Payment Proof'}
+                      {uploading ? 'Uploading & Submitting...' : 'Submit Receipt Slip for Admin Review'}
                     </button>
                   </div>
                 )}
