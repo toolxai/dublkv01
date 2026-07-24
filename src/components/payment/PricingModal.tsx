@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -73,7 +74,48 @@ export default function PricingModal({ isOpen, onClose, movieTitle, movieSlug }:
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  // Pending purchase state
+  const [pendingPurchase, setPendingPurchase] = useState<any | null>(null);
+  const [checkingPending, setCheckingPending] = useState(false);
+
   const supabase = createClient();
+
+  // Check if user has an active pending payment slip under review
+  useEffect(() => {
+    if (!isOpen || !user?.id) {
+      setPendingPurchase(null);
+      setCheckingPending(false);
+      return;
+    }
+
+    const userId = user.id;
+    let isMounted = true;
+    setCheckingPending(true);
+
+    async function checkPendingPayment() {
+      try {
+        const { data, error } = await supabase
+          .from('purchases')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (!error && data && data.length > 0 && isMounted) {
+          setPendingPurchase(data[0]);
+        } else if (isMounted) {
+          setPendingPurchase(null);
+        }
+      } catch (err) {
+        console.error('[checkPendingPayment] error:', err);
+      } finally {
+        if (isMounted) setCheckingPending(false);
+      }
+    }
+
+    checkPendingPayment();
+  }, [isOpen, user, supabase]);
 
   if (!isOpen) return null;
 
@@ -166,8 +208,7 @@ export default function PricingModal({ isOpen, onClose, movieTitle, movieSlug }:
         // Fallback to base64 preview URL for 100% upload guarantee
       }
 
-      // Create pending purchase record for Admin review
-      const { error: insertError } = await supabase.from('purchases').insert({
+      const newPurchase = {
         user_id: user.id,
         movie_id: null,
         type: 'full',
@@ -175,10 +216,15 @@ export default function PricingModal({ isOpen, onClose, movieTitle, movieSlug }:
         payment_method: selectedMethod,
         payment_proof_url: finalProofUrl,
         status: 'pending',
-      });
+        created_at: new Date().toISOString(),
+      };
+
+      // Create pending purchase record for Admin review
+      const { error: insertError } = await supabase.from('purchases').insert(newPurchase);
 
       if (insertError) throw insertError;
 
+      setPendingPurchase(newPurchase);
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Failed to submit payment slip. Please try again.');
@@ -217,9 +263,71 @@ export default function PricingModal({ isOpen, onClose, movieTitle, movieSlug }:
               </svg>
             </button>
 
-            {success ? (
-              /* ===== SUCCESS STATE ===== */
-              <div className="text-center py-8">
+            {checkingPending ? (
+              <div className="py-12 flex justify-center">
+                <LoadingSpinner text="Checking payment status..." />
+              </div>
+            ) : pendingPurchase ? (
+              /* ===== REVIEW IN PROGRESS STATE ===== */
+              <div className="text-center py-4 animate-fade-in">
+                <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 animate-pulse">
+                  <span className="text-3xl">⏳</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-bold mb-3">
+                  ● Review in Progress / පරීක්ෂා කරමින් පවතී
+                </div>
+                <h3 className="text-xl font-display font-bold text-white mb-2">
+                  ඔබගේ Payment Slip එක පරීක්ෂා කරමින් පවතී
+                </h3>
+                <p className="text-dark-300 text-sm mb-2 leading-relaxed">
+                  ඔබ විසින් ලබා දුන් Payment Slip එක අපගේ Admin කණ්ඩායම විසින් පරීක්ෂා කරමින් පවතී. පරීක්ෂාවෙන් පසු ඔබගේ VIP Lifetime Access නොබෝ වේලාවකින් සක්‍රිය වනු ඇත.
+                </p>
+                <p className="text-xs text-dark-400 mb-6">
+                  Your payment slip is currently under review by our admin team. Your VIP access will be unlocked automatically upon approval.
+                </p>
+
+                {/* Receipt Summary Card */}
+                <div className="p-4 rounded-xl bg-dark-800/80 border border-white/10 text-left mb-6 space-y-2.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-dark-400">Payment Status:</span>
+                    <span className="font-semibold text-amber-400 flex items-center gap-1">
+                      <span>⏳</span> Pending Verification
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-dark-400">Method:</span>
+                    <span className="font-semibold text-white uppercase">{pendingPurchase.payment_method || 'Bank Transfer'}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-dark-400">Amount:</span>
+                    <span className="font-semibold text-green-400">{formatCurrency(pendingPurchase.amount || 100)}</span>
+                  </div>
+                  {pendingPurchase.created_at && (
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-dark-400">Submitted:</span>
+                      <span className="text-dark-300">{new Date(pendingPurchase.created_at).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleFreeTrial}
+                    className="flex-1 py-3 px-4 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 font-semibold hover:bg-emerald-600/30 transition-all text-xs"
+                  >
+                    🎬 Continue Watching Free Version (Ads)
+                  </button>
+                  <button
+                    onClick={handleClose}
+                    className="flex-1 py-3 px-4 rounded-xl bg-white/10 text-white font-semibold hover:bg-white/20 transition-all text-xs"
+                  >
+                    Got It
+                  </button>
+                </div>
+              </div>
+            ) : success ? (
+              /* ===== SUCCESS SUBMISSION STATE ===== */
+              <div className="text-center py-6">
                 <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
