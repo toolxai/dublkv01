@@ -89,7 +89,6 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeError, setIframeError] = useState(false);
-  const [mobilePlayerStarted, setMobilePlayerStarted] = useState(false);
   const playerContainerRef = useRef<HTMLDivElement>(null);
 
   // Build server list based on mode — always display generic "Server 1", "Server 2", etc.
@@ -133,7 +132,6 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
     setActiveServerIdx(idx);
     setIframeLoaded(false);
     setIframeError(false);
-    setMobilePlayerStarted(false);
   };
 
   const toggleFullscreen = () => {
@@ -157,7 +155,6 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
   useEffect(() => {
     setIframeLoaded(false);
     setIframeError(false);
-    setMobilePlayerStarted(false);
   }, [activeServerIdx]);
 
   const formatRuntime = (mins: number) => {
@@ -288,19 +285,6 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
                       )}
                     </div>
                   </div>
-                )}
-
-                {/* Mobile Fullscreen Interceptor (Clean overlay without big play button icon) */}
-                {!mobilePlayerStarted && iframeLoaded && (
-                  <div
-                    className="sm:hidden absolute inset-0 z-[15] bg-transparent cursor-pointer"
-                    onClick={() => {
-                      setMobilePlayerStarted(true);
-                      if (!document.fullscreenElement && playerContainerRef.current) {
-                        playerContainerRef.current.requestFullscreen().catch(() => {});
-                      }
-                    }}
-                  />
                 )}
 
                 <iframe
