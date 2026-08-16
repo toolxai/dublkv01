@@ -652,7 +652,11 @@ export default function AdminPage() {
       vipServers = movie.vip_servers.map((s, i) => normalizeServer(s, i, 'VIP Server'));
     }
 
-    const rawDl = (movie as any).download_links || (movie.free_servers && (movie.free_servers as any).download_links) || [];
+    const rawDl = (Array.isArray((movie as any).download_links) && (movie as any).download_links.length > 0)
+      ? (movie as any).download_links
+      : (movie.free_servers && Array.isArray((movie.free_servers as any).download_links) && (movie.free_servers as any).download_links.length > 0)
+      ? (movie.free_servers as any).download_links
+      : [];
 
     setEditForm({
       free_servers: freeServers,
