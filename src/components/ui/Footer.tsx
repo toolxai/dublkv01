@@ -95,22 +95,27 @@ export default function Footer() {
 
           {/* Account & Support */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">Account</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">Legal & Support</h3>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/dashboard" className="text-sm text-dark-400 hover:text-brand-400 transition-colors">
-                  Dashboard
+                <Link href="/dmca" className="text-sm text-dark-400 hover:text-brand-400 transition-colors">
+                  DMCA Policy
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="text-sm text-dark-400 hover:text-brand-400 transition-colors">
-                  My Purchases
+                <Link href="/terms" className="text-sm text-dark-400 hover:text-brand-400 transition-colors">
+                  Terms of Service
                 </Link>
               </li>
               <li>
-                <span className="text-sm text-dark-400">
-                  Support: info@dublk.com
-                </span>
+                <Link href="/contact" className="text-sm text-dark-400 hover:text-brand-400 transition-colors">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <a href="mailto:dublkacc@outlook.com" className="text-sm text-dark-400 hover:text-brand-400 transition-colors">
+                  Support: dublkacc@outlook.com
+                </a>
               </li>
             </ul>
           </div>
@@ -122,12 +127,16 @@ export default function Footer() {
             © {new Date().getFullYear()} DubLK. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <Link href="#" className="text-xs text-dark-500 hover:text-dark-300 transition-colors">
-              Privacy Policy
+            <Link href="/dmca" className="text-xs text-dark-500 hover:text-dark-300 transition-colors">
+              DMCA Notice
             </Link>
             <span className="text-dark-700">•</span>
-            <Link href="#" className="text-xs text-dark-500 hover:text-dark-300 transition-colors">
+            <Link href="/terms" className="text-xs text-dark-500 hover:text-dark-300 transition-colors">
               Terms of Service
+            </Link>
+            <span className="text-dark-700">•</span>
+            <Link href="/contact" className="text-xs text-dark-500 hover:text-dark-300 transition-colors">
+              Contact
             </Link>
           </div>
         </div>
