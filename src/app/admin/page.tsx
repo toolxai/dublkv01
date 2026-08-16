@@ -654,7 +654,7 @@ export default function AdminPage() {
 
     const topLinks: DownloadLinkItem[] = Array.isArray((movie as any).download_links) ? (movie as any).download_links : [];
     const freeLinks: DownloadLinkItem[] = (movie.free_servers && Array.isArray((movie.free_servers as any).download_links)) ? (movie.free_servers as any).download_links : [];
-    const rawDl = freeLinks.length > topLinks.length ? freeLinks : topLinks;
+    const rawDl = topLinks.length > 0 ? topLinks : freeLinks;
 
     setEditForm({
       free_servers: freeServers,

@@ -160,6 +160,15 @@ export async function PATCH(request: NextRequest) {
   const now = new Date().toISOString();
   let payload: Record<string, any> = { ...updates, updated_at: now, created_at: now };
 
+  if (updates.download_links !== undefined) {
+    if (payload.free_servers && typeof payload.free_servers === 'object' && !Array.isArray(payload.free_servers)) {
+      payload.free_servers = {
+        ...payload.free_servers,
+        download_links: updates.download_links,
+      };
+    }
+  }
+
   let { data: movie, error } = await supabase
     .from('movies')
     .update(payload)
