@@ -158,7 +158,8 @@ export async function PATCH(request: NextRequest) {
   }
 
   const now = new Date().toISOString();
-  let payload: Record<string, any> = { ...updates, updated_at: now, created_at: now };
+  // Do NOT include updated_at in payload because updated_at column does not exist in movies table
+  let payload: Record<string, any> = { ...updates, created_at: now };
 
   if (updates.download_links !== undefined) {
     if (payload.free_servers && typeof payload.free_servers === 'object' && !Array.isArray(payload.free_servers)) {
@@ -176,8 +177,8 @@ export async function PATCH(request: NextRequest) {
     .select()
     .single();
 
-  // 1. If download_links column is missing in database schema cache
-  if (error && (error.message?.includes('download_links') || error.message?.includes('schema cache'))) {
+  // If download_links column is missing in database schema
+  if (error && error.message?.includes('download_links')) {
     const downloadLinksToSave = payload.download_links;
     delete payload.download_links;
 
@@ -201,19 +202,6 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const res = await supabase
-      .from('movies')
-      .update(payload)
-      .eq('id', id)
-      .select()
-      .single();
-    movie = res.data;
-    error = res.error;
-  }
-
-  // 2. If updated_at column is missing in database schema
-  if (error && error.message?.includes('updated_at')) {
-    delete payload.updated_at;
     const res = await supabase
       .from('movies')
       .update(payload)
