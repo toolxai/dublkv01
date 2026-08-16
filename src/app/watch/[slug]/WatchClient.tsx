@@ -119,9 +119,11 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
 
   // Available servers for current mode
   const availableServers: StreamServer[] = (() => {
+    const freeList = Array.isArray(movie.free_servers) ? movie.free_servers : ((movie.free_servers as any)?.servers || []);
+    const vipList = Array.isArray(movie.vip_servers) ? movie.vip_servers : ((movie.vip_servers as any)?.servers || []);
     const rawList = isFreeMode
-      ? (movie.free_servers || []).filter((s: any) => s.enabled !== false)
-      : (movie.vip_servers || []).filter((s: any) => s.enabled !== false);
+      ? freeList.filter((s: any) => s.enabled !== false)
+      : vipList.filter((s: any) => s.enabled !== false);
 
     if (rawList.length > 0) return rawList;
 

@@ -120,9 +120,10 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
   }, [user, movie.id]);
 
   // Determine if there are free servers available (legacy or new)
+  const freeList = Array.isArray(movie.free_servers) ? movie.free_servers : ((movie.free_servers as any)?.servers || []);
   const freeServersAvailable = (
-    (movie.free_servers && movie.free_servers.some(s => s.enabled)) ||
-    (!movie.free_servers && (movie.server1_url || movie.server2_url))
+    (freeList.length > 0 && freeList.some((s: any) => s.enabled)) ||
+    (freeList.length === 0 && (movie.server1_url || movie.server2_url))
   );
 
   const handleWatchFree = () => {

@@ -67,7 +67,8 @@ export async function GET(
     }
 
     // Build enabled free server list and format with generic labels (Server 1, Server 2, ...)
-    const rawFree: any[] = (movie.free_servers || []).filter((s: any) => s.enabled !== false);
+    const freeList = Array.isArray(movie.free_servers) ? movie.free_servers : (movie.free_servers?.servers || []);
+    const rawFree: any[] = freeList.filter((s: any) => s.enabled !== false);
     let freeServers = rawFree.map((s, idx) => ({
       ...s,
       label: `Server ${idx + 1}`,

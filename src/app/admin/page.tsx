@@ -640,6 +640,8 @@ export default function AdminPage() {
     let freeServers: StreamServer[] = [];
     if (Array.isArray(movie.free_servers) && movie.free_servers.length > 0) {
       freeServers = movie.free_servers.map((s, i) => normalizeServer(s, i, 'Server'));
+    } else if (movie.free_servers && Array.isArray(movie.free_servers.servers) && movie.free_servers.servers.length > 0) {
+      freeServers = movie.free_servers.servers.map((s: any, i: number) => normalizeServer(s, i, 'Server'));
     } else {
       if (movie.server1_url) freeServers.push({ id: 's1', name: 'Server 1', input_type: 'url', url: movie.server1_url, enabled: true, order: 1 });
       if (movie.server2_url) freeServers.push({ id: 's2', name: 'Server 2', input_type: 'url', url: movie.server2_url, enabled: true, order: 2 });

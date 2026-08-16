@@ -74,31 +74,65 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { tmdb_id, title, slug, description, poster_url, backdrop_url, genres, rating, release_year, runtime, free_servers, vip_servers, is_published } = body;
+  const { tmdb_id, title, slug, description, poster_url, backdrop_url, genres, rating, release_year, runtime, free_servers, vip_servers, download_links, is_published } = body;
 
   if (!tmdb_id || !title || !slug) {
     return NextResponse.json({ error: 'tmdb_id, title, and slug are required' }, { status: 400 });
   }
 
-  const { data: movie, error } = await supabase
+  const insertPayload: Record<string, any> = {
+    tmdb_id,
+    title,
+    slug,
+    description,
+    poster_url,
+    backdrop_url,
+    genres: genres || [],
+    rating: rating || 0,
+    release_year,
+    runtime,
+    free_servers: free_servers || [],
+    vip_servers: vip_servers || [],
+    is_published: !!is_published
+  };
+
+  if (download_links !== undefined) {
+    insertPayload.download_links = download_links;
+  }
+
+  let { data: movie, error } = await supabase
     .from('movies')
-    .insert([{
-      tmdb_id,
-      title,
-      slug,
-      description,
-      poster_url,
-      backdrop_url,
-      genres: genres || [],
-      rating: rating || 0,
-      release_year,
-      runtime,
-      free_servers: free_servers || [],
-      vip_servers: vip_servers || [],
-      is_published: !!is_published
-    }])
+    .insert([insertPayload])
     .select()
     .single();
+
+  // If download_links column is missing in database schema cache
+  if (error && (error.message?.includes('download_links') || error.message?.includes('schema cache'))) {
+    const dlLinks = insertPayload.download_links;
+    delete insertPayload.download_links;
+    if (dlLinks !== undefined) {
+      const curFree = insertPayload.free_servers;
+      if (Array.isArray(curFree)) {
+        insertPayload.free_servers = {
+          servers: curFree,
+          download_links: dlLinks,
+        };
+      } else if (curFree && typeof curFree === 'object') {
+        insertPayload.free_servers = {
+          ...curFree,
+          download_links: dlLinks,
+        };
+      }
+    }
+
+    const res = await supabase
+      .from('movies')
+      .insert([insertPayload])
+      .select()
+      .single();
+    movie = res.data;
+    error = res.error;
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -124,19 +158,56 @@ export async function PATCH(request: NextRequest) {
   }
 
   const now = new Date().toISOString();
-  // Update both updated_at and created_at so it instantly moves to the top of all listings
+  let payload: Record<string, any> = { ...updates, updated_at: now, created_at: now };
+
   let { data: movie, error } = await supabase
     .from('movies')
-    .update({ ...updates, updated_at: now, created_at: now })
+    .update(payload)
     .eq('id', id)
     .select()
     .single();
 
-  // If updated_at column is missing in schema, update created_at only
-  if (error && error.message?.includes('updated_at')) {
+  // 1. If download_links column is missing in database schema cache
+  if (error && (error.message?.includes('download_links') || error.message?.includes('schema cache'))) {
+    const downloadLinksToSave = payload.download_links;
+    delete payload.download_links;
+
+    if (downloadLinksToSave !== undefined) {
+      const currentFree = payload.free_servers ?? updates.free_servers;
+      if (Array.isArray(currentFree)) {
+        payload.free_servers = {
+          servers: currentFree,
+          download_links: downloadLinksToSave,
+        };
+      } else if (currentFree && typeof currentFree === 'object') {
+        payload.free_servers = {
+          ...currentFree,
+          download_links: downloadLinksToSave,
+        };
+      } else {
+        payload.free_servers = {
+          servers: [],
+          download_links: downloadLinksToSave,
+        };
+      }
+    }
+
     const res = await supabase
       .from('movies')
-      .update({ ...updates, created_at: now })
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single();
+    movie = res.data;
+    error = res.error;
+  }
+
+  // 2. If updated_at column is missing in database schema
+  if (error && error.message?.includes('updated_at')) {
+    delete payload.updated_at;
+    const res = await supabase
+      .from('movies')
+      .update(payload)
       .eq('id', id)
       .select()
       .single();
