@@ -125,7 +125,7 @@ export default function DMCAPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <a
-                href="https://t.me/apexAIlk"
+                href="https://t.me/DubLK00"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3.5 p-4 rounded-2xl bg-dark-900/80 border border-white/10 hover:border-blue-500/40 hover:bg-dark-800 transition-all group"
@@ -137,7 +137,7 @@ export default function DMCAPage() {
                 </div>
                 <div>
                   <div className="text-xs text-dark-400 font-medium">Telegram Contact</div>
-                  <div className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">@apexAIlk</div>
+                  <div className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">@DubLK00</div>
                 </div>
               </a>
 

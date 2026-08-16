@@ -42,7 +42,7 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           
           <a
-            href="https://t.me/apexAIlk"
+            href="https://t.me/DubLK00"
             target="_blank"
             rel="noopener noreferrer"
             className="p-8 rounded-3xl bg-dark-900/80 border border-white/10 hover:border-blue-500/40 hover:bg-dark-800 transition-all group relative overflow-hidden"
@@ -55,7 +55,7 @@ export default function ContactPage() {
             <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">Telegram Support</h3>
             <p className="text-sm text-dark-400 mb-4">Direct message our official admin on Telegram for rapid support & inquiries.</p>
             <div className="inline-flex items-center gap-2 text-sm font-bold text-blue-400">
-              <span>@apexAIlk</span>
+              <span>@DubLK00</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
