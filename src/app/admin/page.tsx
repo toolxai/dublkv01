@@ -18,12 +18,20 @@ interface StreamServer {
   label?: string;           // Optional legacy label
 }
 
+export interface DownloadLinkItem {
+  id?: string;
+  quality: string;
+  label: string;
+  url: string;
+}
+
 interface TVEpisode {
   episode_number: number;
   title: string;
   description?: string;
   servers: StreamServer[];
   vip_servers?: StreamServer[];
+  download_links?: DownloadLinkItem[];
 }
 
 interface TVSeason {
@@ -42,6 +50,7 @@ interface Movie {
   server2_url: string | null;
   free_servers: any;
   vip_servers: StreamServer[] | null;
+  download_links?: DownloadLinkItem[] | null;
   poster_url: string | null;
   description: string | null;
   runtime: number | null;
@@ -124,9 +133,39 @@ export default function AdminPage() {
   const [editForm, setEditForm] = useState<{
     free_servers: StreamServer[];
     vip_servers: StreamServer[];
+    download_links: DownloadLinkItem[];
     runtime: string;
     description: string;
-  }>({ free_servers: [], vip_servers: [], runtime: '', description: '' });
+  }>({ free_servers: [], vip_servers: [], download_links: [], runtime: '', description: '' });
+
+  // Download Link helpers for Movies
+  const addMovieDownloadLink = (presetQuality?: string, presetLabel?: string) => {
+    const newLink: DownloadLinkItem = {
+      id: `dl-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      quality: presetQuality || '720p',
+      label: presetLabel || '720p Download link 1',
+      url: '',
+    };
+    setEditForm((prev) => ({
+      ...prev,
+      download_links: [...(prev.download_links || []), newLink],
+    }));
+  };
+
+  const updateMovieDownloadLink = (idx: number, field: keyof DownloadLinkItem, value: string) => {
+    setEditForm((prev) => {
+      const list = [...(prev.download_links || [])];
+      list[idx] = { ...list[idx], [field]: value };
+      return { ...prev, download_links: list };
+    });
+  };
+
+  const removeMovieDownloadLink = (idx: number) => {
+    setEditForm((prev) => ({
+      ...prev,
+      download_links: (prev.download_links || []).filter((_, i) => i !== idx),
+    }));
+  };
 
   // TV Series Editing state
   const [editingTVSeries, setEditingTVSeries] = useState<string | null>(null);
@@ -139,6 +178,43 @@ export default function AdminPage() {
   const [selectedSeasonIdx, setSelectedSeasonIdx] = useState(0);
   const [selectedEpisodeIdx, setSelectedEpisodeIdx] = useState(0);
   const [tvServerTab, setTvServerTab] = useState<'free' | 'vip'>('free');
+
+  // Download Link helpers for TV Episodes
+  const addEpisodeDownloadLink = (sIdx: number, eIdx: number, presetQuality?: string, presetLabel?: string) => {
+    const seasons = [...tvEditForm.seasons];
+    const ep = seasons[sIdx]?.episodes[eIdx];
+    if (!ep) return;
+
+    const currentLinks: DownloadLinkItem[] = ep.download_links || [];
+    const newLink: DownloadLinkItem = {
+      id: `dl-ep-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      quality: presetQuality || '720p',
+      label: presetLabel || '720p Download link 1',
+      url: '',
+    };
+    ep.download_links = [...currentLinks, newLink];
+    setTvEditForm({ ...tvEditForm, seasons });
+  };
+
+  const updateEpisodeDownloadLink = (sIdx: number, eIdx: number, lIdx: number, field: keyof DownloadLinkItem, value: string) => {
+    const seasons = [...tvEditForm.seasons];
+    const ep = seasons[sIdx]?.episodes[eIdx];
+    if (!ep || !ep.download_links) return;
+
+    const list = [...ep.download_links];
+    list[lIdx] = { ...list[lIdx], [field]: value };
+    ep.download_links = list;
+    setTvEditForm({ ...tvEditForm, seasons });
+  };
+
+  const removeEpisodeDownloadLink = (sIdx: number, eIdx: number, lIdx: number) => {
+    const seasons = [...tvEditForm.seasons];
+    const ep = seasons[sIdx]?.episodes[eIdx];
+    if (!ep || !ep.download_links) return;
+
+    ep.download_links = ep.download_links.filter((_, i) => i !== lIdx);
+    setTvEditForm({ ...tvEditForm, seasons });
+  };
 
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -574,9 +650,12 @@ export default function AdminPage() {
       vipServers = movie.vip_servers.map((s, i) => normalizeServer(s, i, 'VIP Server'));
     }
 
+    const rawDl = (movie as any).download_links || (movie.free_servers && (movie.free_servers as any).download_links) || [];
+
     setEditForm({
       free_servers: freeServers,
       vip_servers: vipServers,
+      download_links: Array.isArray(rawDl) ? rawDl : [],
       runtime: movie.runtime?.toString() || '',
       description: movie.description || '',
     });
@@ -789,6 +868,7 @@ export default function AdminPage() {
           id: movie.id,
           free_servers: editForm.free_servers,
           vip_servers: editForm.vip_servers,
+          download_links: editForm.download_links,
           runtime: editForm.runtime ? parseInt(editForm.runtime) : null,
           description: editForm.description,
         }),
@@ -1260,6 +1340,64 @@ export default function AdminPage() {
                         </div>
                       </div>
 
+                      {/* Movie Download Links Section */}
+                      <div className="p-4 rounded-2xl bg-dark-800/80 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <label className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <span>📥</span> Movie Download Links (720p / 1080p)
+                          </label>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[11px] text-dark-400">Quick Add:</span>
+                            <button onClick={() => addMovieDownloadLink('720p', '720p Download link 1')} className="px-2 py-1 text-xs rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30">+ 720p Link 1</button>
+                            <button onClick={() => addMovieDownloadLink('720p', '720p Download link 2 Fast')} className="px-2 py-1 text-xs rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30">+ 720p Link 2 Fast</button>
+                            <button onClick={() => addMovieDownloadLink('1080p', '1080 Download link 1')} className="px-2 py-1 text-xs rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30">+ 1080p Link 1</button>
+                            <button onClick={() => addMovieDownloadLink('1080p', '1080 Download link 2 Fast')} className="px-2 py-1 text-xs rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30">+ 1080p Link 2 Fast</button>
+                            <button onClick={() => addMovieDownloadLink('720p', 'Download Link')} className="px-2 py-1 text-xs rounded bg-white/5 text-dark-200 border border-white/10 hover:bg-white/10">+ Custom Link</button>
+                          </div>
+                        </div>
+
+                        {(!editForm.download_links || editForm.download_links.length === 0) ? (
+                          <p className="text-xs text-dark-400 italic">No download links added yet. Click quick add buttons above.</p>
+                        ) : (
+                          <div className="space-y-2.5">
+                            {editForm.download_links.map((link, dlIdx) => (
+                              <div key={link.id || dlIdx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2.5 rounded-xl bg-dark-900 border border-white/5">
+                                <select
+                                  value={link.quality || '720p'}
+                                  onChange={(e) => updateMovieDownloadLink(dlIdx, 'quality', e.target.value)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-dark-800 border border-white/10 text-white text-xs font-bold"
+                                >
+                                  <option value="720p">720p</option>
+                                  <option value="1080p">1080p</option>
+                                  <option value="480p">480p</option>
+                                  <option value="4K">4K</option>
+                                </select>
+                                <input
+                                  type="text"
+                                  value={link.label}
+                                  onChange={(e) => updateMovieDownloadLink(dlIdx, 'label', e.target.value)}
+                                  placeholder="Link Label (e.g. 720p Download link 1)"
+                                  className="px-3 py-1.5 rounded-lg bg-dark-800 border border-white/10 text-white text-xs sm:w-48 font-medium"
+                                />
+                                <input
+                                  type="text"
+                                  value={link.url}
+                                  onChange={(e) => updateMovieDownloadLink(dlIdx, 'url', e.target.value)}
+                                  placeholder="Target Download URL (https://...)"
+                                  className="flex-1 px-3 py-1.5 rounded-lg bg-dark-800 border border-white/10 text-white text-xs font-mono"
+                                />
+                                <button
+                                  onClick={() => removeMovieDownloadLink(dlIdx)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-xs font-bold hover:bg-red-500/20"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       {/* Runtime & Description */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -1682,6 +1820,62 @@ export default function AdminPage() {
                           </div>
                         );
                       })}
+                    </div>
+
+                    {/* Episode Download Links Section */}
+                    <div className="mt-4 p-4 rounded-2xl bg-dark-900/80 border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <label className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <span>📥</span> Episode Download Links
+                        </label>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[11px] text-dark-400">Quick Add:</span>
+                          <button onClick={() => addEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, '720p', '720p Download link 1')} className="px-2 py-1 text-xs rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30">+ 720p Link 1</button>
+                          <button onClick={() => addEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, '720p', '720p Download link 2 Fast')} className="px-2 py-1 text-xs rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30">+ 720p Link 2 Fast</button>
+                          <button onClick={() => addEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, '1080p', '1080 Download link 1')} className="px-2 py-1 text-xs rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30">+ 1080p Link 1</button>
+                          <button onClick={() => addEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, '1080p', '1080 Download link 2 Fast')} className="px-2 py-1 text-xs rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30">+ 1080p Link 2 Fast</button>
+                        </div>
+                      </div>
+
+                      {(!tvEditForm.seasons[selectedSeasonIdx]?.episodes[selectedEpisodeIdx]?.download_links || tvEditForm.seasons[selectedSeasonIdx].episodes[selectedEpisodeIdx].download_links.length === 0) ? (
+                        <p className="text-xs text-dark-400 italic">No episode download links added yet. Click quick add buttons above.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {tvEditForm.seasons[selectedSeasonIdx].episodes[selectedEpisodeIdx].download_links.map((link, dlIdx) => (
+                            <div key={link.id || dlIdx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 rounded-xl bg-dark-800 border border-white/5">
+                              <select
+                                value={link.quality || '720p'}
+                                onChange={(e) => updateEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, dlIdx, 'quality', e.target.value)}
+                                className="px-2 py-1 rounded bg-dark-900 border border-white/10 text-white text-xs font-bold"
+                              >
+                                <option value="720p">720p</option>
+                                <option value="1080p">1080p</option>
+                                <option value="480p">480p</option>
+                              </select>
+                              <input
+                                type="text"
+                                value={link.label}
+                                onChange={(e) => updateEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, dlIdx, 'label', e.target.value)}
+                                placeholder="Link Label"
+                                className="px-2.5 py-1 rounded bg-dark-900 border border-white/10 text-white text-xs sm:w-44 font-medium"
+                              />
+                              <input
+                                type="text"
+                                value={link.url}
+                                onChange={(e) => updateEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, dlIdx, 'url', e.target.value)}
+                                placeholder="Target Download URL (https://...)"
+                                className="flex-1 px-2.5 py-1 rounded bg-dark-900 border border-white/10 text-white text-xs font-mono"
+                              />
+                              <button
+                                onClick={() => removeEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, dlIdx)}
+                                className="px-2 py-1 rounded bg-red-500/10 text-red-400 text-xs font-bold hover:bg-red-500/20"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

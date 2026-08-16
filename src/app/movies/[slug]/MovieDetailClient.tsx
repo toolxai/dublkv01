@@ -130,19 +130,16 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
     router.push(`/watch/${movie.slug}?mode=free`);
   };
 
-  const handleWatchVip = () => {
+  const handleWatchDataFree = () => {
     if (!user) {
       openAuthModal(() => {});
       return;
     }
+    router.push(`/watch/${movie.slug}?mode=datafree`);
+  };
 
-    if (hasVipAccess) {
-      // Direct access if approved by admin
-      router.push(`/watch/${movie.slug}?mode=vip`);
-    } else {
-      // Payment required if not approved yet
-      setShowPricing(true);
-    }
+  const handleDownload = () => {
+    router.push(`/download/movies/${movie.slug}`);
   };
 
   const formatRuntime = (mins: number) => {
@@ -225,16 +222,27 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                 </p>
               )}
 
-              {/* Two-button action row */}
-              <div className="flex flex-row items-center gap-3 sm:gap-5 mt-6 w-full sm:w-auto">
+              {/* Three-button action row: 2 play buttons top row side-by-side on mobile, Download full-width underneath */}
+              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:items-center sm:gap-5 mt-6 w-full sm:w-auto">
 
-                {/* ── Play (With Ads) ── */}
+                {/* ── Play (Button 1: no badge) ── */}
                 <button
                   onClick={handleWatchFree}
-                  className="relative flex-1 sm:flex-initial inline-flex items-center justify-center gap-2.5 min-w-[130px] sm:min-w-[175px] px-5 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-[0_4px_20px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_25px_rgba(16,185,129,0.5)] hover:-translate-y-0.5 active:scale-[0.97] group"
+                  className="col-span-1 relative flex-1 sm:flex-initial inline-flex items-center justify-center gap-2.5 min-w-[120px] sm:min-w-[160px] px-5 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-[0_4px_20px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_25px_rgba(16,185,129,0.5)] hover:-translate-y-0.5 active:scale-[0.97] group"
                 >
-                  <span className="absolute -top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-extrabold tracking-wider uppercase bg-emerald-950/95 border border-emerald-400/40 text-emerald-300 shadow-sm backdrop-blur-md">
-                    WITH ADS
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow transition-transform duration-300 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                  <span className="whitespace-nowrap text-base sm:text-lg tracking-wide">Play</span>
+                </button>
+
+                {/* ── Play (Button 2: Badge "DATA FREE") ── */}
+                <button
+                  onClick={handleWatchDataFree}
+                  className="col-span-1 relative flex-1 sm:flex-initial inline-flex items-center justify-center gap-2.5 min-w-[120px] sm:min-w-[160px] px-5 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-[#9b5ff7] to-[#5dcdfb] hover:from-[#8642f4] hover:to-[#38bdf8] shadow-[0_4px_20px_rgba(155,95,247,0.35)] hover:shadow-[0_6px_25px_rgba(155,95,247,0.5)] hover:-translate-y-0.5 active:scale-[0.97] group"
+                >
+                  <span className="absolute -top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-extrabold tracking-wider uppercase bg-dark-950/95 border border-[#5dcdfb]/40 text-[#5dcdfb] shadow-sm backdrop-blur-md">
+                    DATA FREE
                   </span>
                   <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow transition-transform duration-300 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
@@ -242,18 +250,15 @@ export default function MovieDetailClient({ movie, relatedMovies, credits }: Mov
                   <span className="whitespace-nowrap text-base sm:text-lg tracking-wide">Play</span>
                 </button>
 
-                {/* ── Play (Without Ads) ── */}
+                {/* ── Download (Button 3: Full width under top play buttons on mobile) ── */}
                 <button
-                  onClick={handleWatchVip}
-                  className="relative flex-1 sm:flex-initial inline-flex items-center justify-center gap-2.5 min-w-[130px] sm:min-w-[175px] px-5 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-[#9b5ff7] to-[#5dcdfb] hover:from-[#8642f4] hover:to-[#38bdf8] shadow-[0_4px_20px_rgba(155,95,247,0.35)] hover:shadow-[0_6px_25px_rgba(155,95,247,0.5)] hover:-translate-y-0.5 active:scale-[0.97] group"
+                  onClick={handleDownload}
+                  className="col-span-2 sm:flex-initial inline-flex items-center justify-center gap-2.5 min-w-[120px] sm:min-w-[160px] px-5 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-[#FF1E56] via-[#FF0055] to-[#E60067] hover:from-[#FF0040] hover:via-[#E6004C] hover:to-[#CC005B] shadow-[0_4px_20px_rgba(255,30,86,0.35)] hover:shadow-[0_6px_25px_rgba(255,30,86,0.5)] hover:-translate-y-0.5 active:scale-[0.97] group"
                 >
-                  <span className="absolute -top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-extrabold tracking-wider uppercase bg-dark-950/95 border border-[#5dcdfb]/40 text-[#5dcdfb] shadow-sm backdrop-blur-md">
-                    {hasVipAccess ? 'VIP UNLOCKED' : 'WITHOUT ADS'}
-                  </span>
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow transition-transform duration-300 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 drop-shadow transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  <span className="whitespace-nowrap text-base sm:text-lg tracking-wide">Play</span>
+                  <span className="whitespace-nowrap text-base sm:text-lg tracking-wide">Download</span>
                 </button>
 
               </div>

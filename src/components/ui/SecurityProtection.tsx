@@ -10,8 +10,8 @@ export default function SecurityProtection() {
   const { isAdmin, canMaintain } = useAuth();
 
   useEffect(() => {
-    // 1. DO NOT apply security on Admin Panel (/admin) or for Admin / Editor users
-    if (pathname?.startsWith('/admin') || isAdmin || canMaintain) {
+    // 1. DO NOT apply security in local development, on Admin Panel (/admin), or for Admin / Editor users
+    if (process.env.NODE_ENV === 'development' || typeof window !== 'undefined' && window.location.hostname === 'localhost' || pathname?.startsWith('/admin') || isAdmin || canMaintain) {
       return;
     }
 

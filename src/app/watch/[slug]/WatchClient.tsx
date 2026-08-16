@@ -274,13 +274,13 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
 
           <div className="flex items-center gap-3">
             <span className="px-5 py-2.5 rounded-xl bg-[#00ff73]/15 text-[#00ff73] border border-[#00ff73]/30 text-xs font-black tracking-wider uppercase">
-              {isFreeMode ? 'FREE MODE' : 'VIP UNLOCKED'}
+              {isFreeMode ? 'FREE MODE' : 'DATA FREE'}
             </span>
           </div>
         </div>
 
-        {/* Notice Card for Free Stream Users */}
-        {isFreeMode && (
+        {/* Notice Card: Normal Mode vs Data Free Mode */}
+        {isFreeMode ? (
           <div className="w-full rounded-2xl bg-dark-900 border border-white/10 p-5 sm:p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5 animate-fade-in">
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2 text-red-500 font-extrabold text-base sm:text-lg">
@@ -290,39 +290,41 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
                 <span>විශේෂ දැනුම්දීමයි</span>
               </div>
               <p className="text-xs sm:text-sm text-dark-300 leading-relaxed font-sans">
-                මෙම වෙබ් අඩවිය නොමිලේ පවත්වාගෙන යාම සඳහා වන අධික පිරිවැය ආවරණය කරගැනීමට කුඩා වෙළඳ දැන්වීම් කිහිපයක් ඇතුළත් කර ඇත. කරුණාකර ඒවා Skip කර නැවත මෙම පිටුවට පැමිණෙන්න. කිසිදු දැන්වීම් බාධාවකින් තොරව සුපිරි අත්දැකීමක් ලබා ගැනීමට Sign Up වී VIP Upgrade කරගන්න. සිදුවන අපහසුතාවයට අපගේ කණගාටුව!
+                මෙම වෙබ් අඩවිය නොමිලේ පවත්වාගෙන යාම සඳහා වන අධික පිරිවැය ආවරණය කරගැනීමට කුඩා වෙළඳ දැන්වීම් කිහිපයක් ඇතුළත් කර ඇත. කරුණාකර ඒවා Skip කර නැවත මෙම පිටුවට පැමිණෙන්න. Account එකක් සාදා Sign In වී Data Free සහ Ads නොමැතිව නොමිලේ නරඹන්න!
               </p>
             </div>
 
-            {hasVipAccess ? (
-              <button
-                onClick={() => router.push(`/watch/${movie.slug}?mode=vip`)}
-                className="flex-shrink-0 px-6 py-3.5 rounded-xl font-bold text-white text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2 whitespace-nowrap"
-              >
-                <span className="text-base">👑</span>
-                <span>You are a VIP Member — Switch to VIP Mode</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleUpgradeVip}
-                className="flex-shrink-0 px-6 py-3.5 rounded-xl font-bold text-white text-xs sm:text-sm bg-gradient-to-r from-[#9b5ff7] to-[#5dcdfb] hover:from-[#8642f4] hover:to-[#38bdf8] shadow-lg shadow-[#9b5ff7]/25 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2 whitespace-nowrap"
-              >
-                <span className="text-base">👑</span>
-                <span>Upgrade to VIP</span>
-              </button>
-            )}
+            <button
+              onClick={() => {
+                if (user) {
+                  router.push(`/watch/${movie.slug}?mode=datafree`);
+                } else {
+                  openAuthModal(() => {});
+                }
+              }}
+              className="flex-shrink-0 px-6 py-3.5 rounded-xl font-bold text-white text-xs sm:text-sm bg-gradient-to-r from-[#9b5ff7] to-[#5dcdfb] hover:from-[#8642f4] hover:to-[#38bdf8] shadow-lg shadow-[#9b5ff7]/25 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2 whitespace-nowrap"
+            >
+              <span className="text-base">⚡</span>
+              <span>{user ? 'Switch to Data Free Mode' : 'Sign In for Data Free Mode'}</span>
+            </button>
+          </div>
+        ) : (
+          <div className="w-full rounded-2xl bg-dark-900 border border-white/10 p-5 sm:p-6 shadow-xl flex items-start gap-3 animate-fade-in">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2 text-red-500 font-extrabold text-base sm:text-lg">
+                <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>විශේෂ දැනුම්දීමයි</span>
+              </div>
+              <p className="text-xs sm:text-sm text-dark-300 leading-relaxed font-sans">
+                මෙහි Data Free හිමිවන්නේ Zoom/Learning Packages වලට වන අතර නොබෝ දිනකින් Social Media Packages සදහාද මෙම සේවාව ලබා දීමට බලාපොරොත්තු වෙමු.
+              </p>
+            </div>
           </div>
         )}
 
       </div>
-
-      <PricingModal
-        isOpen={showPricing}
-        onClose={() => setShowPricing(false)}
-        movieId={movie.id}
-        movieTitle={movie.title}
-        movieSlug={movie.slug}
-      />
     </div>
   );
 }
