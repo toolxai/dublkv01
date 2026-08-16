@@ -142,7 +142,7 @@ export default function DMCAPage() {
               </a>
 
               <a
-                href="mailto:dublkacc@outlook.com"
+                href="mailto:dublkofficial01@gmail.com"
                 className="flex items-center gap-3.5 p-4 rounded-2xl bg-dark-900/80 border border-white/10 hover:border-purple-500/40 hover:bg-dark-800 transition-all group"
               >
                 <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
@@ -152,7 +152,7 @@ export default function DMCAPage() {
                 </div>
                 <div>
                   <div className="text-xs text-dark-400 font-medium">Email Inquiry</div>
-                  <div className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">dublkacc@outlook.com</div>
+                  <div className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">dublkofficial01@gmail.com</div>
                 </div>
               </a>
             </div>

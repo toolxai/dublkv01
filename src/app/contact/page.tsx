@@ -63,7 +63,7 @@ export default function ContactPage() {
           </a>
 
           <a
-            href="mailto:dublkacc@outlook.com"
+            href="mailto:dublkofficial01@gmail.com"
             className="p-8 rounded-3xl bg-dark-900/80 border border-white/10 hover:border-purple-500/40 hover:bg-dark-800 transition-all group relative overflow-hidden"
           >
             <div className="w-14 h-14 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-6 group-hover:scale-110 transition-transform">
@@ -74,7 +74,7 @@ export default function ContactPage() {
             <h3 className="text-xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">Email Support</h3>
             <p className="text-sm text-dark-400 mb-4">Send us formal inquiries, DMCA notices, or account assistance requests.</p>
             <div className="inline-flex items-center gap-2 text-sm font-bold text-purple-400">
-              <span>dublkacc@outlook.com</span>
+              <span>dublkofficial01@gmail.com</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>

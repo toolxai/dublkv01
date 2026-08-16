@@ -113,8 +113,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="mailto:dublkacc@outlook.com" className="text-sm text-dark-400 hover:text-brand-400 transition-colors">
-                  Support: dublkacc@outlook.com
+                <a href="mailto:dublkofficial01@gmail.com" className="text-sm text-dark-400 hover:text-brand-400 transition-colors">
+                  Support: dublkofficial01@gmail.com
                 </a>
               </li>
             </ul>
