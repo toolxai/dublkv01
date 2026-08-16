@@ -32,11 +32,9 @@ interface MovieDownloadClientProps {
 
 export default function MovieDownloadClient({ movie }: MovieDownloadClientProps) {
   // Extract download links from movie data or use default demonstration fallback
-  const rawLinks: DownloadLinkItem[] = (
-    (movie.download_links && movie.download_links.length > 0) ? movie.download_links :
-    (movie.free_servers && Array.isArray(movie.free_servers.download_links) && movie.free_servers.download_links.length > 0) ? movie.free_servers.download_links :
-    []
-  );
+  const topLinks: DownloadLinkItem[] = Array.isArray(movie.download_links) ? movie.download_links : [];
+  const freeLinks: DownloadLinkItem[] = (movie.free_servers && Array.isArray(movie.free_servers.download_links)) ? movie.free_servers.download_links : [];
+  const rawLinks: DownloadLinkItem[] = freeLinks.length > topLinks.length ? freeLinks : topLinks;
 
   // Fallback demo links if none configured in admin panel yet
   const displayLinks: DownloadLinkItem[] = rawLinks.length > 0 ? rawLinks : [
