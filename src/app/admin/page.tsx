@@ -770,6 +770,7 @@ export default function AdminPage() {
           description: ep.description || '',
           servers,
           vip_servers,
+          download_links: Array.isArray(ep.download_links) ? ep.download_links : [],
         };
       });
     };
@@ -1840,6 +1841,7 @@ export default function AdminPage() {
                           <button onClick={() => addEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, '720p', '720p Download link 2 Fast')} className="px-2 py-1 text-xs rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30">+ 720p Link 2 Fast</button>
                           <button onClick={() => addEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, '1080p', '1080 Download link 1')} className="px-2 py-1 text-xs rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30">+ 1080p Link 1</button>
                           <button onClick={() => addEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, '1080p', '1080 Download link 2 Fast')} className="px-2 py-1 text-xs rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30">+ 1080p Link 2 Fast</button>
+                          <button onClick={() => addEpisodeDownloadLink(selectedSeasonIdx, selectedEpisodeIdx, '720p', 'Download Link')} className="px-2 py-1 text-xs rounded bg-white/5 text-dark-200 border border-white/10 hover:bg-white/10">+ Custom Link</button>
                         </div>
                       </div>
 
@@ -1857,6 +1859,7 @@ export default function AdminPage() {
                                 <option value="720p">720p</option>
                                 <option value="1080p">1080p</option>
                                 <option value="480p">480p</option>
+                                <option value="4K">4K</option>
                               </select>
                               <input
                                 type="text"

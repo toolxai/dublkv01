@@ -80,7 +80,7 @@ export default function TVDownloadClient({ series }: TVDownloadClientProps) {
     { quality: '1080p', label: '1080 Download link 2 Fast', url: '#' },
   ];
 
-  const qualities = Array.from(new Set(displayLinks.map(l => l.quality || '720p')));
+  const qualities = Array.from(new Set(displayLinks.map(l => (l.quality || '720p').trim())));
 
   return (
     <div className="min-h-screen bg-dark-950 text-white page-enter">

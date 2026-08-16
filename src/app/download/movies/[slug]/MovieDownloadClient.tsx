@@ -47,7 +47,7 @@ export default function MovieDownloadClient({ movie }: MovieDownloadClientProps)
   ];
 
   // Group by quality for clean display
-  const qualities = Array.from(new Set(displayLinks.map(l => l.quality || '720p')));
+  const qualities = Array.from(new Set(displayLinks.map(l => (l.quality || '720p').trim())));
 
   const formatRuntime = (mins: number) => {
     const h = Math.floor(mins / 60);
