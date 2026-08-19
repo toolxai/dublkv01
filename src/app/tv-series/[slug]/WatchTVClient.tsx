@@ -169,8 +169,10 @@ export default function WatchTVClient({ series, initialMode = 'free' }: WatchTVC
       const vipList = (currentEpisode?.vip_servers || []).filter((s: ServerOption) => (s.embed_code && s.embed_code.trim()) || (s.url && s.url.trim()));
       if (vipList.length > 0) return vipList;
     }
-    const freeList = currentEpisode?.servers && currentEpisode.servers.length > 0 ? currentEpisode.servers : defaultServersForEp;
-    return freeList;
+    const rawFree = currentEpisode?.servers || [];
+    const validFree = rawFree.filter((s: ServerOption) => (s.embed_code && s.embed_code.trim()) || (s.url && s.url.trim()));
+    if (validFree.length > 0) return validFree;
+    return defaultServersForEp;
   })();
 
   const currentServer = episodeServers[activeServerIdx] || episodeServers[0];
