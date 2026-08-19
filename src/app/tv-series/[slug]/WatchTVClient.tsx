@@ -427,7 +427,7 @@ export default function WatchTVClient({ series, initialMode = 'free' }: WatchTVC
                 <span>විශේෂ දැනුම්දීමයි</span>
               </div>
               <p className="text-xs sm:text-sm text-dark-300 leading-relaxed font-sans">
-                මෙහි Data Free හිමිවන්නේ Zoom/Learning Packages වලට වන අතර නොබෝ දිනකින් Social Media Packages සදහාද මෙම සේවාව ලබා දීමට බලාපොරොත්තු වෙමු.
+                මෙහි Data Free හිමිවන්නේ Zoom/Learning Packages වලට වන අතර නොබෝ දිනකින් Social Media Packages සදහාද මෙම සේවාව ලබා දීමට බලාපොරොත්තු වෙමු. Data Free හා Ads නොමැතිව චිත්රපට සහ TV Series නැරඹීමේදී වඩාත් හොඳ වීඩියෝ අත්දැකීමක් ලබා ගැනීම සඳහා Desktop Mode හෝ PC / Laptop එකක් භාවිත කරන්න.
               </p>
             </div>
           </div>
