@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PricingModal from '@/components/payment/PricingModal';
+import DataFreeNoticeModal from '@/components/ui/DataFreeNoticeModal';
 
 interface StreamServer {
   url?: string;
@@ -73,7 +74,23 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
   const [hasVipAccess, setHasVipAccess] = useState(false);
+  const [showDataFreeNotice, setShowDataFreeNotice] = useState(false);
   const playerContainerRef = useRef<HTMLDivElement>(null);
+
+  // Notice pop-up for signed-in users on Data Free mode
+  useEffect(() => {
+    if (!isFreeMode && user) {
+      const hasSeen = sessionStorage.getItem('hasSeenDataFreeNotice');
+      if (!hasSeen) {
+        setShowDataFreeNotice(true);
+      }
+    }
+  }, [isFreeMode, user]);
+
+  const handleCloseDataFreeNotice = () => {
+    sessionStorage.setItem('hasSeenDataFreeNotice', 'true');
+    setShowDataFreeNotice(false);
+  };
 
   // Check VIP access for current user
   useEffect(() => {
@@ -325,6 +342,11 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
             </div>
           </div>
         )}
+
+        <DataFreeNoticeModal
+          isOpen={showDataFreeNotice}
+          onClose={handleCloseDataFreeNotice}
+        />
 
       </div>
     </div>
