@@ -9,6 +9,7 @@ import AuthModal from '@/components/auth/AuthModal';
 import AuthCodeRedirect from '@/components/ui/AuthCodeRedirect';
 import CommunityModal from '@/components/ui/CommunityModal';
 import SecurityProtection from '@/components/ui/SecurityProtection';
+import { Analytics } from '@vercel/analytics/next';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -77,6 +78,7 @@ export default function RootLayout({
             <Footer />
           </AuthProvider>
         </ToastProvider>
+        <Analytics />
       </body>
     </html>
   );
