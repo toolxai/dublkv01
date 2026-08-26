@@ -91,6 +91,23 @@ export default function WatchTVClient({ series, initialMode = 'free' }: WatchTVC
   const [streamMode, setStreamMode] = useState<'free' | 'vip'>(initialMode);
   const [showDataFreeNotice, setShowDataFreeNotice] = useState(false);
 
+  // Deep Protection: Block all pop-under redirects on player page
+  useEffect(() => {
+    const originalOpen = window.open;
+    window.open = function () {
+      console.warn('Blocked pop-under redirect window.open call');
+      return null;
+    };
+
+    // Remove any leftover ad script tags from document
+    const adScripts = document.querySelectorAll('script[src*="rufflefireballcherries"]');
+    adScripts.forEach((s) => s.remove());
+
+    return () => {
+      window.open = originalOpen;
+    };
+  }, []);
+
   // Notice pop-up for signed-in users on Data Free mode
   useEffect(() => {
     if (streamMode === 'vip' && user) {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 
@@ -8,6 +9,14 @@ export default function GlobalAdScript() {
 
   // Exclude pop-under ad scripts on player pages (/watch and /tv-series)
   const isPlayerPage = pathname?.startsWith('/watch') || pathname?.startsWith('/tv-series');
+
+  useEffect(() => {
+    if (isPlayerPage) {
+      // Purge leftover ad scripts from DOM when entering player pages
+      const scripts = document.querySelectorAll('script[src*="rufflefireballcherries"]');
+      scripts.forEach((s) => s.remove());
+    }
+  }, [isPlayerPage]);
 
   if (isPlayerPage) {
     return null;
