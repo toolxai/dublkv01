@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import Script from 'next/script';
 import HomeClient from '@/app/HomeClient';
 import MovieRow from '@/components/ui/MovieRow';
 import TVSeriesRow from '@/components/ui/TVSeriesRow';
@@ -107,6 +108,12 @@ export default async function HomePage() {
         {/* 5 Top rated ( film + tv series ) */}
         <MediaRow title="Top Rated" items={topRatedMedia} icon="⭐" />
       </div>
+
+      {/* Pop-under ad script (landing page only) */}
+      <Script
+        src="https://rufflefireballcherries.com/ff/94/92/ff9492a22f63544d48ddb1aa65ef2320.js"
+        strategy="afterInteractive"
+      />
     </div>
   );
 }
