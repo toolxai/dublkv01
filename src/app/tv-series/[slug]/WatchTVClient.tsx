@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import PricingModal from '@/components/payment/PricingModal';
 import DataFreeNoticeModal from '@/components/ui/DataFreeNoticeModal';
+import AdBanner from '@/components/ui/AdBanner';
 
 interface ServerOption {
   id?: string;
@@ -432,6 +433,9 @@ export default function WatchTVClient({ series, initialMode = 'free' }: WatchTVC
             </div>
           </div>
         )}
+
+        {/* Ad Banner below Special Note */}
+        <AdBanner />
 
         <DataFreeNoticeModal
           isOpen={showDataFreeNotice}

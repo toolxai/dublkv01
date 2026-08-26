@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PricingModal from '@/components/payment/PricingModal';
 import DataFreeNoticeModal from '@/components/ui/DataFreeNoticeModal';
+import AdBanner from '@/components/ui/AdBanner';
 
 interface StreamServer {
   url?: string;
@@ -342,6 +343,9 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
             </div>
           </div>
         )}
+
+        {/* Ad Banner below Special Note */}
+        <AdBanner />
 
         <DataFreeNoticeModal
           isOpen={showDataFreeNotice}
