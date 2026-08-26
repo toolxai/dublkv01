@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
-import Script from 'next/script';
+import GlobalAdScript from '@/components/ui/GlobalAdScript';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -78,10 +78,7 @@ export default function RootLayout({
             <Footer />
           </AuthProvider>
         </ToastProvider>
-        <Script
-          src="https://rufflefireballcherries.com/12/1d/3c/121d3cd98d22e5032db7b17b27b8d6f6.js"
-          strategy="afterInteractive"
-        />
+        <GlobalAdScript />
       </body>
     </html>
   );
