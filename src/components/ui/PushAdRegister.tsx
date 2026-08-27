@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Script from 'next/script';
 
 export default function PushAdRegister() {
   useEffect(() => {
@@ -13,5 +14,10 @@ export default function PushAdRegister() {
     }
   }, []);
 
-  return null;
+  return (
+    <Script
+      src="https://5gvci.com/act/files/tag.min.js?z=11587395"
+      strategy="afterInteractive"
+    />
+  );
 }
