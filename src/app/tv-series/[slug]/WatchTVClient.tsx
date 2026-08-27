@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import PricingModal from '@/components/payment/PricingModal';
 import DataFreeNoticeModal from '@/components/ui/DataFreeNoticeModal';
-import AdBanner from '@/components/ui/AdBanner';
 
 interface ServerOption {
   id?: string;
@@ -90,23 +89,6 @@ export default function WatchTVClient({ series, initialMode = 'free' }: WatchTVC
   const [hasVipAccess, setHasVipAccess] = useState(false);
   const [streamMode, setStreamMode] = useState<'free' | 'vip'>(initialMode);
   const [showDataFreeNotice, setShowDataFreeNotice] = useState(false);
-
-  // Deep Protection: Block all pop-under redirects on player page
-  useEffect(() => {
-    const originalOpen = window.open;
-    window.open = function () {
-      console.warn('Blocked pop-under redirect window.open call');
-      return null;
-    };
-
-    // Remove any leftover ad script tags from document
-    const adScripts = document.querySelectorAll('script[src*="rufflefireballcherries"]');
-    adScripts.forEach((s) => s.remove());
-
-    return () => {
-      window.open = originalOpen;
-    };
-  }, []);
 
   // Notice pop-up for signed-in users on Data Free mode
   useEffect(() => {
@@ -450,9 +432,6 @@ export default function WatchTVClient({ series, initialMode = 'free' }: WatchTVC
             </div>
           </div>
         )}
-
-        {/* Ad Banner below Special Note */}
-        <AdBanner />
 
         <DataFreeNoticeModal
           isOpen={showDataFreeNotice}

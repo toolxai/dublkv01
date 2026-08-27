@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
-import GlobalAdScript from '@/components/ui/GlobalAdScript';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -78,7 +77,6 @@ export default function RootLayout({
             <Footer />
           </AuthProvider>
         </ToastProvider>
-        <GlobalAdScript />
       </body>
     </html>
   );
