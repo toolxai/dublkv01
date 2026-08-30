@@ -7,7 +7,7 @@ import Script from 'next/script';
 export default function MonetagAdScripts() {
   const pathname = usePathname();
 
-  // Exclude popunder and vignette ads on player pages (/watch/* and /tv-series/*)
+  // Exclude popunder ad on player pages (/watch/* and /tv-series/*)
   // so movie playback, server switching, and controls are 100% unaffected.
   const isPlayerPage = pathname?.startsWith('/watch') || pathname?.startsWith('/tv-series');
 
@@ -29,13 +29,6 @@ export default function MonetagAdScripts() {
       <Script
         src="https://al5sm.com/tag.min.js"
         data-zone="11669591"
-        strategy="afterInteractive"
-      />
-
-      {/* Vignette Banner Ad - Zone 11669586 */}
-      <Script
-        src="https://n6wxm.com/vignette.min.js"
-        data-zone="11669586"
         strategy="afterInteractive"
       />
     </>
