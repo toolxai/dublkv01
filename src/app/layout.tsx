@@ -8,9 +8,8 @@ import Footer from '@/components/ui/Footer';
 import AuthModal from '@/components/auth/AuthModal';
 import AuthCodeRedirect from '@/components/ui/AuthCodeRedirect';
 import CommunityModal from '@/components/ui/CommunityModal';
+import Script from 'next/script';
 import SecurityProtection from '@/components/ui/SecurityProtection';
-import PushAdRegister from '@/components/ui/PushAdRegister';
-import MonetagAdScripts from '@/components/ui/MonetagAdScripts';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -73,8 +72,12 @@ export default function RootLayout({
             <AuthModal />
             <CommunityModal />
             <SecurityProtection />
-            <PushAdRegister />
-            <MonetagAdScripts />
+            <Script
+              async
+              src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7941847813485994"
+              crossOrigin="anonymous"
+              strategy="afterInteractive"
+            />
             <main className="flex-1 pb-20 md:pb-0">
               {children}
             </main>
