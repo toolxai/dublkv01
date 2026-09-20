@@ -8,7 +8,6 @@ import Footer from '@/components/ui/Footer';
 import AuthModal from '@/components/auth/AuthModal';
 import AuthCodeRedirect from '@/components/ui/AuthCodeRedirect';
 import CommunityModal from '@/components/ui/CommunityModal';
-import Script from 'next/script';
 import SecurityProtection from '@/components/ui/SecurityProtection';
 
 export const viewport: Viewport = {
@@ -53,6 +52,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  other: {
+    'google-adsense-account': 'ca-pub-7941847813485994',
+  },
 };
 
 export default function RootLayout({
@@ -62,6 +64,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7941847813485994"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="min-h-screen flex flex-col">
         <ToastProvider>
           <AuthProvider>
@@ -72,12 +81,6 @@ export default function RootLayout({
             <AuthModal />
             <CommunityModal />
             <SecurityProtection />
-            <Script
-              async
-              src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7941847813485994"
-              crossOrigin="anonymous"
-              strategy="afterInteractive"
-            />
             <main className="flex-1 pb-20 md:pb-0">
               {children}
             </main>
