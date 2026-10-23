@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import WatchTVClient from './WatchTVClient';
 import TVSeriesRow from '@/components/ui/TVSeriesRow';
 import PricingModal from '@/components/payment/PricingModal';
+import AdBanner from '@/components/ui/AdBanner';
 import type { TMDBCredits } from '@/lib/tmdb';
 
 interface TVSeriesDetailClientProps {
@@ -192,10 +193,15 @@ export default function TVSeriesDetailClient({ series, relatedSeries, credits }:
 
               {/* Description */}
               {series.description && (
-                <p className="text-dark-300 leading-relaxed mb-6 max-w-2xl text-sm sm:text-base">
+                <p className="text-dark-300 leading-relaxed mb-4 max-w-2xl text-sm sm:text-base">
                   {series.description}
                 </p>
               )}
+
+              {/* Ad — below description */}
+              <div className="mb-6">
+                <AdBanner />
+              </div>
 
               {/* Three-button action row matching Movie detail page */}
               <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:items-center sm:gap-5 mt-6 w-full sm:w-auto">

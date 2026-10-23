@@ -9,7 +9,6 @@ import AuthModal from '@/components/auth/AuthModal';
 import AuthCodeRedirect from '@/components/ui/AuthCodeRedirect';
 import CommunityModal from '@/components/ui/CommunityModal';
 import SecurityProtection from '@/components/ui/SecurityProtection';
-import AdBanner from '@/components/ui/AdBanner';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -72,7 +71,6 @@ export default function RootLayout({
             <AuthModal />
             <CommunityModal />
             <SecurityProtection />
-            <AdBanner />
             <main className="flex-1 pb-20 md:pb-0">
               {children}
             </main>
