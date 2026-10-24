@@ -7,7 +7,6 @@ import { createClient } from '@/lib/supabase/client';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PricingModal from '@/components/payment/PricingModal';
 import DataFreeNoticeModal from '@/components/ui/DataFreeNoticeModal';
-import AdBanner from '@/components/ui/AdBanner';
 
 interface StreamServer {
   url?: string;
@@ -280,9 +279,6 @@ export default function WatchClient({ movie, isFreeMode }: WatchClientProps) {
           </div>
 
         </div>
-
-        {/* Ad — below video player */}
-        <AdBanner />
 
         {/* BOTTOM: MOVIE STATUS CARD */}
         <div className="w-full bg-dark-900/90 border border-white/10 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">

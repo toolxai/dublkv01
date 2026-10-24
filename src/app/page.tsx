@@ -4,7 +4,6 @@ import MovieRow from '@/components/ui/MovieRow';
 import TVSeriesRow from '@/components/ui/TVSeriesRow';
 import ComingSoonRow from '@/components/ui/ComingSoonRow';
 import MediaRow from '@/components/ui/MediaRow';
-import AdBanner from '@/components/ui/AdBanner';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -96,21 +95,11 @@ export default async function HomePage() {
         {/* 1 Recently added movies */}
         <MovieRow title="Recently Added Movies" movies={recentlyAddedMovies} icon="🎬" />
 
-        {/* Ad — below movie cards */}
-        <div className="px-4 sm:px-6 lg:px-8">
-          <AdBanner />
-        </div>
-
         {/* 2 Coming soon movies */}
         <ComingSoonRow title="Coming Soon Movies" comingSoonItems={comingSoonMoviesList} icon="⏳" />
 
         {/* 3 Recently added tv series */}
         <TVSeriesRow title="Recently Added TV Series" seriesList={recentlyAddedTVSeries} icon="📺" />
-
-        {/* Ad — below TV series cards */}
-        <div className="px-4 sm:px-6 lg:px-8">
-          <AdBanner />
-        </div>
 
         {/* 4 Coming soon tv series */}
         <ComingSoonRow title="Coming Soon TV Series" comingSoonItems={comingSoonTVSeriesList} icon="⏳" />
