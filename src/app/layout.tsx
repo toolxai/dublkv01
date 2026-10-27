@@ -66,12 +66,27 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        {/* Google AdSense */}
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7941847813485994"
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
+        {/* Google Analytics */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-SF5V2W3VE0"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-SF5V2W3VE0');
+          `}
+        </Script>
       </head>
       <body className="min-h-screen flex flex-col">
         <ToastProvider>
