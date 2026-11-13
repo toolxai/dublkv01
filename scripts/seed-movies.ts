@@ -12,7 +12,11 @@ import { createClient } from '@supabase/supabase-js';
 // ===== Configuration =====
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jpkcywwrszbypoivftea.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const TMDB_TOKEN = process.env.TMDB_API_KEY || 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3MTc0NWM0YTY2NDMyN2I0YTQ5OTNlY2M4NDlhMWEwMyIsIm5iZiI6MTc3MDQwOTcyNC44NzY5OTk5LCJzdWIiOiI2OTg2NGVmY2M5MTU1YWU4NmM2OTE4MjgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.p49Vf4Zya9eHX7RewdGJGvnWABamcWprD9EaL00RrGQ';
+const TMDB_TOKEN = process.env.TMDB_API_KEY || '';
+if (!TMDB_TOKEN) {
+  console.error('Missing TMDB_API_KEY environment variable.');
+  process.exit(1);
+}
 
 const GENRE_MAP: Record<number, string> = {
   28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy',
