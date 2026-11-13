@@ -2,6 +2,11 @@
   command = "npm run build"
   publish = ".next"
 
+[build.environment]
+  # NEXT_PUBLIC_* values are intentionally inlined into the client bundle by
+  # Next.js, so they must not trip Netlify's secrets scanning.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
